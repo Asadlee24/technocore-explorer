@@ -58,48 +58,49 @@ export function Navbar() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b border-surface-border bg-background/85 backdrop-blur-xl transition-all shadow-lg">
+      <header className="sticky top-0 z-50 w-full border-b border-surface-border bg-background/90 backdrop-blur-xl transition-all shadow-md">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo & Brand */}
-            <div className="flex items-center gap-2.5 sm:gap-3">
-              <Link href="/" className="flex items-center gap-2 sm:gap-2.5 group">
-                <div className="relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-gradient-to-br from-cyan-500/20 via-emerald-500/15 to-purple-500/20 border border-accent-cyan/40 text-accent-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] group-hover:border-accent-cyan/80 transition-all">
-                  <Cpu className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                  <span className="absolute -top-1 -right-1 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-accent-emerald rounded-full animate-ping opacity-75" />
-                  <span className="absolute -top-1 -right-1 w-2 sm:w-2.5 h-2 sm:h-2.5 bg-accent-emerald rounded-full" />
+          <div className="flex items-center justify-between h-16 gap-3">
+            
+            {/* Left: Brand + Creator Tag */}
+            <div className="flex items-center gap-3 shrink-0">
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <div className="relative flex items-center justify-center w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500/20 via-emerald-500/15 to-purple-500/20 border border-accent-cyan/40 text-accent-cyan shadow-[0_0_15px_rgba(0,240,255,0.2)] group-hover:border-accent-cyan/80 transition-all">
+                  <Cpu className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent-emerald rounded-full animate-ping opacity-75" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-accent-emerald rounded-full" />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <span className="font-bold text-sm sm:text-base tracking-tight text-white group-hover:text-accent-cyan transition-colors">
+                    <span className="font-bold text-base tracking-tight text-white group-hover:text-accent-cyan transition-colors">
                       Technocore
                     </span>
-                    <span className="text-[10px] sm:text-xs font-mono px-1.5 py-0.5 rounded bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 font-semibold">
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 font-semibold">
                       RADAR
                     </span>
                   </div>
-                  <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono tracking-wider">
+                  <p className="text-[9px] text-slate-400 font-mono tracking-wider">
                     ECOSYSTEM EXPLORER
                   </p>
                 </div>
               </Link>
 
-              {/* Creator Pill on Desktop */}
+              {/* Creator Pill on Desktop - Single Line & Clean */}
               <a
                 href="https://asad-lee-portfolio.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-purple-500/10 to-cyan-500/10 border border-purple-500/25 hover:border-accent-cyan/50 text-[11px] font-mono text-purple-300 hover:text-white transition-all shadow-sm group ml-2"
-                title="View Creator Portfolio"
+                className="hidden xl:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/30 hover:border-accent-purple text-xs font-mono text-purple-300 hover:text-white transition-all shadow-sm whitespace-nowrap shrink-0 group ml-1"
+                title="Built by Asad Lee"
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-accent-purple group-hover:bg-accent-cyan transition-colors" />
                 <span>By <strong className="font-semibold text-white group-hover:text-accent-cyan">Asad Lee</strong></span>
-                <ExternalLink className="w-2.5 h-2.5 text-slate-400 group-hover:text-accent-cyan" />
+                <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-accent-cyan" />
               </a>
             </div>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
+            {/* Middle: Desktop Navigation */}
+            <nav className="hidden lg:flex items-center gap-0.5 xl:gap-1 overflow-x-auto no-scrollbar py-1">
               {NAV_LINKS.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href;
@@ -107,7 +108,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`relative px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                    className={`relative px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                       isActive
                         ? "text-white bg-surface-raised border border-surface-highlight shadow-sm"
                         : "text-slate-400 hover:text-slate-200 hover:bg-surface-raised/50"
@@ -131,17 +132,17 @@ export function Navbar() {
               })}
             </nav>
 
-            {/* Controls & Technical Toggle & Mobile Toggle */}
-            <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Right: Controls & Technical Toggle & Mobile Toggle */}
+            <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
               {/* Live Status Indicator */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-raised/70 border border-surface-border text-[11px] font-mono">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-raised/70 border border-surface-border text-[11px] font-mono whitespace-nowrap">
                 <span
                   className={`w-2 h-2 rounded-full ${
                     isOnline ? "bg-accent-emerald animate-pulse" : "bg-accent-rose"
                   }`}
                 />
                 <span className="text-slate-300 font-medium">
-                  {isOnline ? "LIVE" : "DISCONNECTED"}
+                  {isOnline ? "LIVE" : "OFFLINE"}
                 </span>
               </div>
 
@@ -149,7 +150,7 @@ export function Navbar() {
               <button
                 type="button"
                 onClick={toggleTechnicalMode}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border ${
+                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border whitespace-nowrap ${
                   isTechnicalMode
                     ? "bg-accent-cyan/20 text-accent-cyan border-accent-cyan/50 shadow-[0_0_12px_rgba(0,240,255,0.25)]"
                     : "bg-surface-raised text-slate-400 border-surface-border hover:border-slate-600 hover:text-slate-200"
@@ -157,27 +158,8 @@ export function Navbar() {
                 title="Toggle Technical Mode to inspect raw cryptographic DIDs, nonces, and signatures"
               >
                 <Binary className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">
-                  {isTechnicalMode ? "Tech Mode: ON" : "Tech Mode"}
-                </span>
-                <span
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    isTechnicalMode ? "bg-accent-cyan" : "bg-slate-600"
-                  }`}
-                />
+                <span>{isTechnicalMode ? "Tech: ON" : "Tech Mode"}</span>
               </button>
-
-              {/* Creator Portfolio Button (Mobile/Tablet) */}
-              <a
-                href="https://asad-lee-portfolio.vercel.app/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="lg:hidden flex items-center gap-1 px-2 py-1 rounded-md bg-purple-950/40 border border-purple-500/30 text-[11px] font-mono text-purple-200 hover:bg-purple-900/50 transition-colors"
-                title="Built by Asad Lee"
-              >
-                <UserCheck className="w-3.5 h-3.5 text-accent-purple" />
-                <span className="hidden xs:inline">Asad Lee</span>
-              </a>
 
               {/* Mobile Menu Toggle Button */}
               <button
@@ -195,9 +177,9 @@ export function Navbar() {
           {mobileMenuOpen && (
             <div className="lg:hidden py-4 border-t border-surface-border space-y-3 animate-in slide-in-from-top-3 duration-200">
               {/* Creator card inside mobile menu */}
-              <div className="p-3 rounded-xl bg-gradient-to-r from-purple-950/30 via-surface-raised to-cyan-950/30 border border-purple-500/20 flex items-center justify-between">
+              <div className="p-3 rounded-xl bg-gradient-to-r from-purple-950/40 via-surface-raised to-cyan-950/40 border border-purple-500/30 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-purple to-accent-cyan flex items-center justify-center text-background font-bold font-mono text-xs">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-accent-purple to-accent-cyan flex items-center justify-center text-white font-bold font-mono text-xs">
                     AL
                   </div>
                   <div>
@@ -245,15 +227,6 @@ export function Navbar() {
                     </Link>
                   );
                 })}
-              </div>
-
-              {/* Quick toggle info */}
-              <div className="pt-2 border-t border-surface-border/50 flex items-center justify-between text-[11px] text-slate-400 font-mono px-1">
-                <span className="flex items-center gap-1.5">
-                  <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-accent-emerald animate-pulse" : "bg-accent-rose"}`} />
-                  {isOnline ? "Network Connected" : "Connecting..."}
-                </span>
-                <span className="text-slate-400">Zero-Auth Protocol</span>
               </div>
             </div>
           )}
