@@ -2,6 +2,7 @@ import React from "react";
 import { technocoreClient } from "@/lib/protocol/client";
 import { LivePulseHero } from "@/components/overview/LivePulseHero";
 import { MetricCards } from "@/components/overview/MetricCards";
+import { NetworkActivityChart } from "@/components/overview/NetworkActivityChart";
 import { RecentDiscoveryFeed } from "@/components/overview/RecentDiscoveryFeed";
 import { ActiveRoomsSection } from "@/components/overview/ActiveRoomsSection";
 import { PROTOCOL_PATTERNS } from "@/lib/protocol/patterns-data";
@@ -33,6 +34,11 @@ export default async function HomePage() {
           </span>
         </div>
         <MetricCards overview={overview} />
+      </section>
+
+      {/* Live Network Activity Chart (Messages/Min Graphs & Room Velocity) */}
+      <section>
+        <NetworkActivityChart overview={overview} />
       </section>
 
       {/* Live Stream & Discovery Grid */}
