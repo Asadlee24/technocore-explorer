@@ -160,7 +160,7 @@ export class MerkleEngine {
         messageHash,
         leafHash,
         proofAvailable: true,
-        status: "archived_and_verified",
+        status: "archived_and_verified" as const,
       });
     }
 

@@ -18,9 +18,10 @@ import {
 
 interface ArchiveExplorerViewProps {
   initialRecords?: ArchiveRecord[];
+  initialTotalCount?: number;
 }
 
-export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps = {}) {
+export function ArchiveExplorerView({ initialRecords, initialTotalCount }: ArchiveExplorerViewProps = {}) {
   const [records, setRecords] = useState<ArchiveRecord[]>(initialRecords || []);
   const [loading, setLoading] = useState(!initialRecords || initialRecords.length === 0);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +30,7 @@ export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps
   const [signedOnly, setSignedOnly] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<ArchiveRecord | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [totalCount, setTotalCount] = useState(initialRecords?.length || 0);
+  const [totalCount, setTotalCount] = useState(initialTotalCount ?? initialRecords?.length ?? 0);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
 
@@ -40,6 +41,7 @@ export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps
       const params = new URLSearchParams();
       if (q && q.trim()) params.set("q", q.trim());
       if (room && room !== "all") params.set("room", room);
+      if (signed) params.set("signed", "true");
       params.set("limit", "100");
 
       const res = await fetch(`/api/continuum/archive?${params.toString()}`);
@@ -48,12 +50,9 @@ export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps
 
       if (!json.success) throw new Error(json.error || "Unknown error");
 
-      let data: ArchiveRecord[] = json.records || [];
-      if (signed) {
-        data = data.filter((r: ArchiveRecord) => r.from?.startsWith("did:key:"));
-      }
+      const data: ArchiveRecord[] = json.records || [];
       setRecords(data);
-      setTotalCount(json.count ?? data.length);
+      setTotalCount(json.total ?? json.count ?? data.length);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg);
@@ -62,25 +61,25 @@ export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps
     }
   }, []);
 
-  // Initial load
+  // Initial load if no initialRecords
   useEffect(() => {
     if (!initialRecords || initialRecords.length === 0) {
       fetchRecords();
     }
   }, [fetchRecords, initialRecords]);
 
-  // Debounced search
+  // Debounced search on query/room/signed changes
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
-      if (initialRecords && initialRecords.length > 0 && !searchQuery && roomFilter === "all" && !signedOnly) {
+      if (initialRecords && initialRecords.length > 0) {
         return;
       }
     }
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       fetchRecords(searchQuery, roomFilter, signedOnly);
-    }, 400);
+    }, 300);
     return () => {
       if (debounceTimer.current) clearTimeout(debounceTimer.current);
     };

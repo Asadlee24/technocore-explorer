@@ -29,7 +29,7 @@ export class TechnocoreClient {
         next: { revalidate: 10 },
         headers: {
           Accept: "text/plain",
-          "User-Agent": "TechnocoreExplorer/1.0",
+          "User-Agent": "curl/8.4.0",
         },
       });
 
@@ -72,7 +72,11 @@ export class TechnocoreClient {
 
     // 1. Try plain text fetch with curl User-Agent (fast and 100% reliable on Technocore)
     try {
-      const url = `${this.baseUrl}/r/${cleanRoom}`;
+      const params = new URLSearchParams();
+      if (options?.since !== undefined) params.set("since", String(options.since));
+      if (options?.limit !== undefined) params.set("limit", String(options.limit));
+      const queryString = params.toString() ? `?${params.toString()}` : "";
+      const url = `${this.baseUrl}/r/${cleanRoom}${queryString}`;
       const res = await fetch(url, {
         next: { revalidate: 3 },
         headers: {
@@ -128,7 +132,7 @@ export class TechnocoreClient {
         next: { revalidate: 5 },
         headers: {
           Accept: "application/json",
-          "User-Agent": "TechnocoreExplorer/1.0",
+          "User-Agent": "curl/8.4.0",
         },
       });
 
@@ -175,7 +179,7 @@ export class TechnocoreClient {
         next: { revalidate: 30 },
         headers: {
           Accept: "text/plain",
-          "User-Agent": "TechnocoreExplorer/1.0",
+          "User-Agent": "curl/8.4.0",
         },
       });
 

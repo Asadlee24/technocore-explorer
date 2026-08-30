@@ -4,6 +4,7 @@ import { MerkleEngine } from "./merkle-engine";
 import { computeMessageHash, computeLeafHash } from "./merkle";
 import { canonicalizeSingleLine } from "../protocol/parser";
 import { technocoreClient } from "../protocol/client";
+import { verifyMessageSignature } from "../crypto/verify";
 
 export class ContinuumService {
   /**
@@ -13,7 +14,7 @@ export class ContinuumService {
     return ContinuumDatabase.getLiveStats();
   }
   /**
-   * Search archive records with multiple filters (backed by real database & live ingestion fallback)
+   * Search archive records with multiple filters (backed by real Supabase database)
    */
   static async getArchiveRecords(filter?: {
     room?: string;
@@ -21,26 +22,59 @@ export class ContinuumService {
     did?: string;
     messageHash?: string;
     searchQuery?: string;
+    signedOnly?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<ArchiveRecord[]> {
-    // 1. Query Supabase database
-    let rows = await ContinuumDatabase.getMessages(filter);
+    const { records } = await this.getArchiveRecordsWithCount(filter);
+    return records;
+  }
 
-    // 2. If database has zero records (e.g., initial clean run before background worker),
-    // ingest live observable messages from official protocol endpoints on the fly
-    if (!rows || rows.length === 0) {
-      const liveMessages = await this.fetchAndBuildLiveArchivedRecords(filter?.room || "lobby");
-      if (liveMessages.length > 0) {
-        return liveMessages;
+  /**
+   * Search archive records with multiple filters and return total count
+   */
+  static async getArchiveRecordsWithCount(filter?: {
+    room?: string;
+    sequence?: number;
+    did?: string;
+    messageHash?: string;
+    searchQuery?: string;
+    signedOnly?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ records: ArchiveRecord[]; totalCount: number }> {
+    // 1. Query Supabase database
+    const { records: rows, totalCount } = await ContinuumDatabase.getMessagesWithCount(filter);
+
+    // 2. If a specific sequence was searched but not yet in Supabase, attempt protocol lookup & archive on-the-fly
+    if (rows.length === 0) {
+      const targetSeq = filter?.sequence !== undefined ? filter.sequence : (filter?.searchQuery && /^\d+$/.test(filter.searchQuery.trim()) ? parseInt(filter.searchQuery.trim(), 10) : undefined);
+      if (targetSeq !== undefined && !isNaN(targetSeq)) {
+        const liveArchived = await this.fetchAndArchiveMessageBySeq(targetSeq, filter?.room || "lobby");
+        if (liveArchived) {
+          return { records: [liveArchived], totalCount: 1 };
+        }
       }
     }
 
-    // 3. Map database rows to ArchiveRecord with dynamic Merkle proofs
+    // 3. If database has zero records and no search filter is applied (e.g. cold start),
+    // ingest live observable messages from official protocol endpoints on the fly
+    if (rows.length === 0 && !filter?.searchQuery && !filter?.sequence && !filter?.did && !filter?.messageHash) {
+      const liveMessages = await this.fetchAndBuildLiveArchivedRecords(filter?.room || "lobby");
+      if (liveMessages.length > 0) {
+        return { records: liveMessages, totalCount: liveMessages.length };
+      }
+    }
+
+    if (rows.length === 0) {
+      return { records: [], totalCount: 0 };
+    }
+
+    // 4. Map database rows to ArchiveRecord with dynamic Merkle proofs
     const leaves = rows.map((r) => r.leaf_hash);
     const tree = MerkleEngine.buildTree(leaves);
 
-    return rows.map((row, idx) => {
+    const records: ArchiveRecord[] = rows.map((row, idx) => {
       const proof = MerkleEngine.generateProof(tree, idx);
       return {
         id: row.id || `rec-${row.seq}`,
@@ -51,7 +85,7 @@ export class ContinuumService {
         text: row.raw_text,
         nonce: row.nonce ? Number(row.nonce) : undefined,
         sig: row.sig || undefined,
-        signatureValid: row.signature_valid ?? (row.from_identity.startsWith("did:key:") ? true : null),
+        signatureValid: row.signature_valid ?? (row.from_identity?.startsWith("did:key:") ? true : null),
         archiveTimestamp: row.archive_timestamp,
         archiveBlock: Number(row.archive_block_id),
         messageHash: row.message_hash,
@@ -59,9 +93,11 @@ export class ContinuumService {
         merkleRoot: tree.root,
         merklePath: proof ? proof.merklePath : [],
         proofAvailable: true,
-        status: "archived_and_verified",
+        status: "archived_and_verified" as const,
       };
     });
+
+    return { records, totalCount };
   }
 
   /**
@@ -70,6 +106,12 @@ export class ContinuumService {
   static async getRecordById(idOrSeq: string, room?: string): Promise<ArchiveRecord | null> {
     const row = await ContinuumDatabase.getMessageByIdOrSeq(idOrSeq, room);
     if (!row) {
+      // Check if this is a sequence number reachable via live protocol
+      if (/^\d+$/.test(idOrSeq)) {
+        const liveArchived = await this.fetchAndArchiveMessageBySeq(parseInt(idOrSeq, 10), room || "lobby");
+        if (liveArchived) return liveArchived;
+      }
+
       // Check live archive fallback
       const records = await this.getArchiveRecords({ room: room || "lobby", limit: 20 });
       return (
@@ -95,7 +137,7 @@ export class ContinuumService {
       text: row.raw_text,
       nonce: row.nonce ? Number(row.nonce) : undefined,
       sig: row.sig || undefined,
-      signatureValid: row.signature_valid ?? (row.from_identity.startsWith("did:key:") ? true : null),
+      signatureValid: row.signature_valid ?? (row.from_identity?.startsWith("did:key:") ? true : null),
       archiveTimestamp: row.archive_timestamp,
       archiveBlock: Number(row.archive_block_id),
       messageHash: row.message_hash,
@@ -103,8 +145,88 @@ export class ContinuumService {
       merkleRoot: tree.root,
       merklePath: proof ? proof.merklePath : [],
       proofAvailable: true,
-      status: "archived_and_verified",
+      status: "archived_and_verified" as const,
     };
+  }
+
+  /**
+   * Helper to fetch a single message by sequence from protocol on-demand, verify, and archive into Supabase
+   */
+  private static async fetchAndArchiveMessageBySeq(seq: number, roomName: string = "lobby"): Promise<ArchiveRecord | null> {
+    try {
+      const cleanRoom = roomName.replace(/^\/r\//, "");
+      const since = Math.max(0, seq - 1);
+      const res = await technocoreClient.getRoomMessages(cleanRoom, { since, limit: 10 });
+      const found = res.messages?.find((m) => m.seq === seq);
+      if (!found) return null;
+
+      let isSigValid: boolean | null = null;
+      if (found.from.startsWith("did:key:") && found.sig) {
+        const sigVerdict = verifyMessageSignature({
+          did: found.from,
+          room: cleanRoom,
+          nonce: found.nonce ?? 0,
+          text: found.text,
+          sig: found.sig,
+        });
+        isSigValid = sigVerdict.verified;
+      }
+
+      const canonicalText = canonicalizeSingleLine(found.text);
+      const archiveTs = new Date().toISOString();
+      const messageHash = computeMessageHash({
+        room: cleanRoom,
+        seq: found.seq,
+        from: found.from,
+        text: found.text,
+        nonce: found.nonce,
+      });
+      const leafHash = computeLeafHash(found.seq, messageHash, archiveTs);
+
+      const row: DbMessageRow = {
+        room_name: cleanRoom,
+        seq: found.seq,
+        observed_ts: found.ts,
+        from_identity: found.from,
+        raw_text: found.text,
+        canonical_text: canonicalText,
+        nonce: found.nonce ?? null,
+        sig: found.sig ?? null,
+        signature_valid: isSigValid,
+        message_hash: messageHash,
+        leaf_hash: leafHash,
+        archive_timestamp: archiveTs,
+        archive_block_id: 1,
+      };
+
+      await ContinuumDatabase.insertMessages([row]);
+
+      const tree = MerkleEngine.buildTree([row.leaf_hash]);
+      const proof = MerkleEngine.generateProof(tree, 0);
+
+      return {
+        id: row.id || `rec-${row.seq}`,
+        room: row.room_name,
+        seq: Number(row.seq),
+        ts: row.observed_ts,
+        from: row.from_identity,
+        text: row.raw_text,
+        nonce: row.nonce ? Number(row.nonce) : undefined,
+        sig: row.sig || undefined,
+        signatureValid: row.signature_valid ?? (row.from_identity?.startsWith("did:key:") ? true : null),
+        archiveTimestamp: row.archive_timestamp,
+        archiveBlock: Number(row.archive_block_id),
+        messageHash: row.message_hash,
+        leafHash: row.leaf_hash,
+        merkleRoot: tree.root,
+        merklePath: proof ? proof.merklePath : [],
+        proofAvailable: true,
+        status: "archived_and_verified" as const,
+      };
+    } catch (err) {
+      console.error("fetchAndArchiveMessageBySeq error:", err);
+      return null;
+    }
   }
 
   /**

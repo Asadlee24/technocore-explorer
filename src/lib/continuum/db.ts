@@ -246,43 +246,85 @@ export class ContinuumDatabase {
     did?: string;
     messageHash?: string;
     searchQuery?: string;
+    signedOnly?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<DbMessageRow[]> {
+    const result = await this.getMessagesWithCount(filter);
+    return result.records;
+  }
+
+  /**
+   * Query archived messages with filters and return exact matching count
+   */
+  static async getMessagesWithCount(filter?: {
+    room?: string;
+    sequence?: number;
+    did?: string;
+    messageHash?: string;
+    searchQuery?: string;
+    signedOnly?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ records: DbMessageRow[]; totalCount: number }> {
     try {
+      const limit = Math.min(Math.max(filter?.limit || 50, 1), 200);
+      const offset = Math.max(filter?.offset || 0, 0);
+
       let query = this.client
         .from("continuum_messages")
-        .select("*")
+        .select("*", { count: "exact" })
         .order("observed_ts", { ascending: false })
-        .limit(filter?.limit || 50);
+        .range(offset, offset + limit - 1);
 
-      if (filter?.offset) {
-        query = query.range(filter.offset, filter.offset + (filter?.limit || 50) - 1);
-      }
-      if (filter?.room) {
-        query = query.ilike("room_name", `%${filter.room}%`);
+      if (filter?.room && filter.room !== "all") {
+        query = query.eq("room_name", filter.room.trim());
       }
       if (filter?.sequence !== undefined && !isNaN(filter.sequence)) {
         query = query.eq("seq", filter.sequence);
       }
       if (filter?.did) {
-        query = query.ilike("from_identity", `%${filter.did}%`);
+        query = query.ilike("from_identity", `%${filter.did.trim()}%`);
+      }
+      if (filter?.signedOnly) {
+        query = query.ilike("from_identity", "did:key:%");
       }
       if (filter?.messageHash) {
-        query = query.or(`message_hash.ilike.%${filter.messageHash}%,leaf_hash.ilike.%${filter.messageHash}%`);
+        const h = filter.messageHash.trim();
+        query = query.or(`message_hash.ilike.%${h}%,leaf_hash.ilike.%${h}%`);
       }
       if (filter?.searchQuery) {
-        const q = filter.searchQuery;
-        query = query.or(`raw_text.ilike.%${q}%,from_identity.ilike.%${q}%,room_name.ilike.%${q}%`);
+        const q = filter.searchQuery.trim();
+        if (q) {
+          const isNumeric = /^\d+$/.test(q);
+          const isHex = /^[0-9a-fA-F]{8,}$/.test(q);
+          const isDid = q.startsWith("did:");
+
+          if (isNumeric) {
+            const num = parseInt(q, 10);
+            query = query.or(`seq.eq.${num},raw_text.ilike.%${q}%,from_identity.ilike.%${q}%,room_name.ilike.%${q}%`);
+          } else if (isDid) {
+            query = query.or(`from_identity.ilike.%${q}%,raw_text.ilike.%${q}%`);
+          } else if (isHex) {
+            query = query.or(`message_hash.ilike.%${q}%,leaf_hash.ilike.%${q}%,raw_text.ilike.%${q}%,from_identity.ilike.%${q}%`);
+          } else {
+            query = query.or(`raw_text.ilike.%${q}%,from_identity.ilike.%${q}%,room_name.ilike.%${q}%`);
+          }
+        }
       }
 
-      const { data, error } = await query;
-      if (error || !data) {
-        return [];
+      const { data, error, count } = await query;
+      if (error) {
+        console.error("DB getMessages error:", error);
+        return { records: [], totalCount: 0 };
       }
-      return data as DbMessageRow[];
-    } catch {
-      return [];
+      return {
+        records: (data as DbMessageRow[]) || [],
+        totalCount: count ?? data?.length ?? 0,
+      };
+    } catch (err) {
+      console.error("DB getMessages exception:", err);
+      return { records: [], totalCount: 0 };
     }
   }
 

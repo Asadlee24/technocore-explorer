@@ -65,6 +65,9 @@ export class ContinuumCollector {
         observedTs: string;
       }> = [];
 
+      const detectedGaps: DbGapRow[] = [];
+      const roomUpserts: DbRoomRow[] = [];
+
       // 3. Poll each room using cursor
       for (const roomName of allRoomNames.slice(0, 30)) {
         const lastSeq = cursorMap.get(roomName) || 0;
@@ -82,7 +85,7 @@ export class ContinuumCollector {
           // Detect sequence gaps if sequence jumped forward
           if (currentCursor > 0 && msg.seq > currentCursor + 1) {
             const missingCount = msg.seq - currentCursor - 1;
-            const gap: DbGapRow = {
+            detectedGaps.push({
               room_name: roomName,
               start_seq: currentCursor + 1,
               end_seq: msg.seq - 1,
@@ -90,8 +93,7 @@ export class ContinuumCollector {
               detected_at: new Date().toISOString(),
               gap_reason: "rate_limit_or_buffer_rollover",
               status: "unrecoverable_ephemeral",
-            };
-            await ContinuumDatabase.insertGap(gap);
+            });
           }
 
           currentCursor = Math.max(currentCursor, msg.seq);
@@ -147,8 +149,8 @@ export class ContinuumCollector {
           });
         }
 
-        // Update room cursor and statistics in database
-        const roomRow: DbRoomRow = {
+        // Prepare room cursor and statistics update
+        roomUpserts.push({
           room_name: roomName,
           room_class: roomClassification.isMailbox ? "mailbox" : roomClassification.isOwned ? "owned" : roomClassification.isEphemeral ? "ephemeral" : roomClassification.isPrivate ? "private" : "public",
           first_seq_observed: 1,
@@ -157,7 +159,14 @@ export class ContinuumCollector {
           coverage_percent: 100.0,
           is_complete_sequence: true,
           last_observed_at: new Date().toISOString(),
-        };
+        });
+      }
+
+      // Batch persist gaps and room updates
+      for (const gap of detectedGaps.slice(0, 10)) {
+        await ContinuumDatabase.insertGap(gap);
+      }
+      for (const roomRow of roomUpserts) {
         await ContinuumDatabase.upsertRoom(roomRow);
       }
 
