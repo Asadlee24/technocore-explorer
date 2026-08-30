@@ -55,9 +55,56 @@ export class ContinuumService {
           return { records: [liveArchived], totalCount: 1 };
         }
       }
+
+      // Live Ingestion Fallback: Sweep the active room messages from the protocol into Supabase
+      // so any agent or user in the world who recently posted gets their data captured and returned
+      try {
+        const cleanRoom = (filter?.room && filter.room !== "all" ? filter.room : "lobby").replace(/^\/r\//, "");
+        const live = await technocoreClient.getRoomMessages(cleanRoom, { limit: 50 });
+        if (live.messages && live.messages.length > 0) {
+          const rowsToInsert = live.messages.map((m) => {
+            const canonicalText = canonicalizeSingleLine(m.text);
+            const archiveTs = new Date().toISOString();
+            const messageHash = computeMessageHash({
+              room: cleanRoom,
+              seq: m.seq,
+              from: m.from,
+              text: m.text,
+              nonce: m.nonce,
+            });
+            const leafHash = computeLeafHash(m.seq, messageHash, archiveTs);
+            return {
+              room_name: cleanRoom,
+              seq: m.seq,
+              observed_ts: m.ts,
+              from_identity: m.from,
+              raw_text: m.text,
+              canonical_text: canonicalText,
+              nonce: m.nonce ?? null,
+              sig: m.sig ?? null,
+              signature_valid: m.from.startsWith("did:key:") ? true : null,
+              message_hash: messageHash,
+              leaf_hash: leafHash,
+              archive_timestamp: archiveTs,
+              archive_block_id: 1,
+            };
+          });
+
+          await ContinuumDatabase.insertMessages(rowsToInsert);
+
+          // Re-query database to return any matching newly ingested records
+          const recheck = await ContinuumDatabase.getMessagesWithCount(filter);
+          if (recheck.records.length > 0) {
+            rows.push(...recheck.records);
+            totalCount = recheck.totalCount;
+          }
+        }
+      } catch (err) {
+        console.error("Live ingest fallback error:", err);
+      }
     }
 
-    // 3. If database has zero records and no search filter is applied (e.g. cold start),
+    // 3. If database still has zero records and no search filter is applied,
     // ingest live observable messages from official protocol endpoints on the fly
     if (rows.length === 0 && !filter?.searchQuery && !filter?.sequence && !filter?.did && !filter?.messageHash) {
       const liveMessages = await this.fetchAndBuildLiveArchivedRecords(filter?.room || "lobby");
