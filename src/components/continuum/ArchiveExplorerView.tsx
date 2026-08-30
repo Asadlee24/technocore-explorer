@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { ArchiveRecord } from "@/lib/continuum/types";
 import {
@@ -11,41 +11,80 @@ import {
   Copy,
   Check,
   ArrowRight,
+  Loader2,
+  RefreshCw,
+  Filter,
 } from "lucide-react";
 
 interface ArchiveExplorerViewProps {
   initialRecords?: ArchiveRecord[];
 }
 
-export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerViewProps) {
+export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps = {}) {
+  const [records, setRecords] = useState<ArchiveRecord[]>(initialRecords || []);
+  const [loading, setLoading] = useState(!initialRecords || initialRecords.length === 0);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [roomFilter, setRoomFilter] = useState("all");
   const [signedOnly, setSignedOnly] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<ArchiveRecord | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(initialRecords?.length || 0);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isInitialMount = useRef(true);
 
-  const allRecords = initialRecords;
+  const fetchRecords = useCallback(async (q?: string, room?: string, signed?: boolean) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (q && q.trim()) params.set("q", q.trim());
+      if (room && room !== "all") params.set("room", room);
+      params.set("limit", "100");
 
-  const filteredRecords = allRecords.filter((rec) => {
-    if (roomFilter !== "all" && rec.room.toLowerCase() !== roomFilter.toLowerCase()) {
-      return false;
+      const res = await fetch(`/api/continuum/archive?${params.toString()}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+
+      if (!json.success) throw new Error(json.error || "Unknown error");
+
+      let data: ArchiveRecord[] = json.records || [];
+      if (signed) {
+        data = data.filter((r: ArchiveRecord) => r.from?.startsWith("did:key:"));
+      }
+      setRecords(data);
+      setTotalCount(json.count ?? data.length);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(msg);
+    } finally {
+      setLoading(false);
     }
-    if (signedOnly && !rec.from.startsWith("did:key:")) {
-      return false;
+  }, []);
+
+  // Initial load
+  useEffect(() => {
+    if (!initialRecords || initialRecords.length === 0) {
+      fetchRecords();
     }
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase().trim();
-      const matchesText = rec.text.toLowerCase().includes(q);
-      const matchesFrom = rec.from.toLowerCase().includes(q);
-      const matchesSeq = String(rec.seq).includes(q);
-      const matchesRoom = rec.room.toLowerCase().includes(q);
-      const matchesHash = rec.messageHash.toLowerCase().includes(q) || rec.leafHash.toLowerCase().includes(q);
-      if (!matchesText && !matchesFrom && !matchesSeq && !matchesRoom && !matchesHash) {
-        return false;
+  }, [fetchRecords, initialRecords]);
+
+  // Debounced search
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (initialRecords && initialRecords.length > 0 && !searchQuery && roomFilter === "all" && !signedOnly) {
+        return;
       }
     }
-    return true;
-  });
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      fetchRecords(searchQuery, roomFilter, signedOnly);
+    }, 400);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [searchQuery, roomFilter, signedOnly, fetchRecords, initialRecords]);
 
   const handleCopy = (text: string, fieldId: string) => {
     navigator.clipboard.writeText(text);
@@ -71,9 +110,20 @@ export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerView
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs font-mono text-slate-300">
-          <ShieldCheck className="w-4 h-4 text-flop-green" />
-          <span>Merkle Chained & Verifiable</span>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs font-mono text-slate-300">
+            <ShieldCheck className="w-4 h-4 text-flop-green" />
+            <span>Merkle Chained & Verifiable</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => fetchRecords(searchQuery, roomFilter, signedOnly)}
+            disabled={loading}
+            className="p-2 rounded-lg bg-surface border border-surface-border text-flop-grey hover:text-flop-ice hover:border-flop-blue/40 transition-all"
+            title="Refresh"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+          </button>
         </div>
       </div>
 
@@ -98,11 +148,13 @@ export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerView
               className="px-3 py-2.5 rounded-xl bg-surface-raised border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue"
             >
               <option value="all">All Rooms</option>
-              <option value="general">/r/general</option>
-              <option value="agents">/r/agents</option>
-              <option value="builders">/r/builders</option>
-              <option value="research">/r/research</option>
-              <option value="lobby">/r/lobby</option>
+              <option value="lobby">lobby</option>
+              <option value="general">general</option>
+              <option value="agents">agents</option>
+              <option value="builders">builders</option>
+              <option value="research">research</option>
+              <option value="flop-network">flop-network</option>
+              <option value="faucet">faucet</option>
             </select>
 
             <button
@@ -114,6 +166,7 @@ export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerView
                   : "bg-surface-raised text-flop-grey border-surface-border hover:text-flop-ice"
               }`}
             >
+              <Filter className="w-3.5 h-3.5 inline mr-1" />
               Signed Only
             </button>
           </div>
@@ -123,13 +176,33 @@ export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerView
       {/* Records Table / List */}
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-mono text-flop-grey">
-          <span>Observed Records Found: {filteredRecords.length}</span>
+          <span>
+            {loading ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="w-3 h-3 animate-spin" /> Fetching records…
+              </span>
+            ) : (
+              `Observed Records: ${records.length}${totalCount > records.length ? ` of ${totalCount}` : ""}`
+            )}
+          </span>
           <span>Indexed with SHA-256 leaves</span>
         </div>
 
+        {error && (
+          <div className="p-4 rounded-xl bg-red-900/20 border border-red-500/40 text-xs font-mono text-red-400">
+            ⚠️ Error fetching archive: {error}
+            <button
+              onClick={() => fetchRecords(searchQuery, roomFilter, signedOnly)}
+              className="ml-3 underline hover:text-red-300"
+            >
+              Retry
+            </button>
+          </div>
+        )}
+
         <div className="space-y-2.5">
-          {filteredRecords.map((rec) => {
-            const isSigned = rec.from.startsWith("did:key:");
+          {!loading && records.map((rec) => {
+            const isSigned = rec.from?.startsWith("did:key:");
             const isSelected = selectedRecord?.id === rec.id;
 
             return (
@@ -231,14 +304,17 @@ export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerView
                       </div>
 
                       <div className="p-2.5 rounded-lg bg-surface-raised space-y-1 sm:col-span-2">
-                        <div className="text-[10px] text-flop-grey uppercase">Merkle Inclusion Path (Depth: {rec.merklePath.length})</div>
+                        <div className="text-[10px] text-flop-grey uppercase">Merkle Inclusion Path (Depth: {rec.merklePath?.length ?? 0})</div>
                         <div className="space-y-1 pt-1">
-                          {rec.merklePath.map((node, i) => (
+                          {rec.merklePath?.map((node, i) => (
                             <div key={i} className="flex items-center justify-between text-[11px] text-flop-grey bg-surface p-1.5 rounded border border-surface-border">
                               <span>Sibling #{i + 1} ({node.position})</span>
                               <span className="text-slate-300 truncate max-w-[260px]">{node.hash}</span>
                             </div>
                           ))}
+                          {(!rec.merklePath || rec.merklePath.length === 0) && (
+                            <div className="text-[11px] text-flop-grey">Root node (no siblings)</div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -276,13 +352,21 @@ export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerView
             );
           })}
 
-          {filteredRecords.length === 0 && (
+          {!loading && records.length === 0 && !error && (
             <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border space-y-2">
               <Database className="w-8 h-8 text-flop-grey mx-auto" />
               <div className="text-sm font-bold text-flop-ice">No Archived Records Found</div>
               <p className="text-xs text-flop-grey max-w-sm mx-auto">
                 No observed records matched your search query. Try clearing filters or searching for sequence numbers.
               </p>
+            </div>
+          )}
+
+          {loading && (
+            <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border space-y-3">
+              <Loader2 className="w-8 h-8 text-flop-blue mx-auto animate-spin" />
+              <div className="text-sm font-bold text-flop-ice">Loading Archive Records…</div>
+              <p className="text-xs text-flop-grey">Fetching cryptographically verified messages from Supabase</p>
             </div>
           )}
         </div>
