@@ -48,19 +48,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Message text is required." }, { status: 400 });
     }
 
-    // 1. Transmit to official Technocore protocol server
-    const postRes = await fetch(`https://technocore.chat/r/${encodeURIComponent(room)}`, {
-      method: "POST",
+    const cleanRoom = room.replace(/^\/r\//, "");
+    const canonicalText = canonicalizeSingleLine(text);
+
+    // 1. Transmit to official Technocore protocol server using official lane
+    let protocolUrl: string;
+    if (from.startsWith("did:key:") && sig) {
+      // Signed write lane
+      protocolUrl = `https://technocore.chat/r/${encodeURIComponent(cleanRoom)}/say-signed/${encodeURIComponent(from)}/${encodeURIComponent(sig)}/${nonce}/${encodeURIComponent(canonicalText)}`;
+    } else {
+      // Anonymous write lane
+      protocolUrl = `https://technocore.chat/r/${encodeURIComponent(cleanRoom)}/say/${encodeURIComponent(from)}/${encodeURIComponent(canonicalText)}`;
+    }
+
+    const postRes = await fetch(protocolUrl, {
       headers: {
         "User-Agent": "curl/8.4.0",
-        "Content-Type": "application/json",
+        Accept: "text/plain, */*",
       },
-      body: JSON.stringify({
-        from,
-        text,
-        nonce,
-        sig,
-      }),
     });
 
     const replyText = await postRes.text();
