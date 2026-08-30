@@ -31,8 +31,50 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
   const [selectedRecord, setSelectedRecord] = useState<ArchiveRecord | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(initialTotalCount ?? initialRecords?.length ?? 0);
+  const [showBroadcast, setShowBroadcast] = useState(false);
+  const [broadcastNick, setBroadcastNick] = useState("asadlee");
+  const [broadcastRoom, setBroadcastRoom] = useState("lobby");
+  const [broadcastText, setBroadcastText] = useState("");
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastSuccess, setBroadcastSuccess] = useState<string | null>(null);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+
+  const handleBroadcast = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!broadcastText.trim()) return;
+    setBroadcasting(true);
+    setError(null);
+    setBroadcastSuccess(null);
+    try {
+      const res = await fetch("/api/continuum/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: broadcastNick.trim() || "asadlee",
+          room: broadcastRoom,
+          text: broadcastText.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || "Failed to broadcast message");
+
+      if (json.record) {
+        setRecords((prev) => [json.record, ...prev]);
+        setSelectedRecord(json.record);
+        setTotalCount((prev) => prev + 1);
+        setBroadcastSuccess(`Message broadcasted & cold-storage archived! Sequence #${json.seq}`);
+        setBroadcastText("");
+      } else {
+        setBroadcastSuccess(`Broadcast transmitted to /r/${broadcastRoom}!`);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`Broadcast error: ${msg}`);
+    } finally {
+      setBroadcasting(false);
+    }
+  };
 
   const fetchRecords = useCallback(async (q?: string, room?: string, signed?: boolean) => {
     setLoading(true);
@@ -110,9 +152,16 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs font-mono text-slate-300">
+          <button
+            type="button"
+            onClick={() => setShowBroadcast(!showBroadcast)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-flop-blue/20 hover:bg-flop-blue/30 border border-flop-blue/40 text-xs font-mono text-flop-blue font-bold transition-all shadow-sm"
+          >
+            <span>+ Broadcast & Archive Message</span>
+          </button>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs font-mono text-slate-300">
             <ShieldCheck className="w-4 h-4 text-flop-green" />
-            <span>Merkle Chained & Verifiable</span>
+            <span>Merkle Chained</span>
           </div>
           <button
             type="button"
@@ -125,6 +174,93 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
           </button>
         </div>
       </div>
+
+      {/* Broadcast Message Drawer */}
+      {showBroadcast && (
+        <form
+          onSubmit={handleBroadcast}
+          className="p-5 rounded-2xl bg-surface-raised border border-flop-blue/40 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-flop-green animate-pulse" />
+              <h3 className="text-sm font-bold font-mono text-flop-ice">Transmit Observation into Room</h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowBroadcast(false)}
+              className="text-xs font-mono text-flop-grey hover:text-flop-ice"
+            >
+              ✕ Close
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-[11px] font-mono text-flop-grey mb-1 block">Sender / Nickname</label>
+              <input
+                type="text"
+                value={broadcastNick}
+                onChange={(e) => setBroadcastNick(e.target.value)}
+                placeholder="e.g. asadlee"
+                className="w-full px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue"
+                required
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-mono text-flop-grey mb-1 block">Target Room</label>
+              <select
+                value={broadcastRoom}
+                onChange={(e) => setBroadcastRoom(e.target.value)}
+                className="w-full px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue"
+              >
+                <option value="lobby">/r/lobby</option>
+                <option value="general">/r/general</option>
+                <option value="agents">/r/agents</option>
+                <option value="dev">/r/dev</option>
+                <option value="meta">/r/meta</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[11px] font-mono text-flop-grey mb-1 block">Message Payload</label>
+            <input
+              type="text"
+              value={broadcastText}
+              onChange={(e) => setBroadcastText(e.target.value)}
+              placeholder="Type your message to transmit and archive..."
+              className="w-full px-3 py-2.5 rounded-xl bg-surface border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue"
+              required
+            />
+          </div>
+
+          {broadcastSuccess && (
+            <div className="p-3 rounded-xl bg-flop-green/10 border border-flop-green/30 text-xs font-mono text-flop-green flex items-center gap-2">
+              <Check className="w-4 h-4" />
+              <span>{broadcastSuccess}</span>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setShowBroadcast(false)}
+              className="px-3 py-2 rounded-xl text-xs font-mono text-flop-grey hover:text-flop-ice"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={broadcasting || !broadcastText.trim()}
+              className="px-4 py-2 rounded-xl bg-flop-blue hover:bg-flop-blue-glow text-flop-dark font-bold text-xs font-mono transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {broadcasting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              <span>{broadcasting ? "Transmitting & Archiving..." : "Broadcast & Cold-Archive"}</span>
+            </button>
+          </div>
+        </form>
+      )}
 
       {/* Search & Filter Bar */}
       <div className="p-4 sm:p-5 rounded-2xl bg-surface border border-surface-border space-y-4">
