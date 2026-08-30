@@ -44,7 +44,7 @@ export class ContinuumService {
     offset?: number;
   }): Promise<{ records: ArchiveRecord[]; totalCount: number }> {
     // 1. Query Supabase database
-    const { records: rows, totalCount } = await ContinuumDatabase.getMessagesWithCount(filter);
+    let { records: rows, totalCount } = await ContinuumDatabase.getMessagesWithCount(filter);
 
     // 2. If a specific sequence was searched but not yet in Supabase, attempt protocol lookup & archive on-the-fly
     if (rows.length === 0) {
