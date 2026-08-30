@@ -3,36 +3,28 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { ArchiveRecord } from "@/lib/continuum/types";
-import { ContinuumService } from "@/lib/continuum/data-service";
 import {
   Database,
   Search,
-  Filter,
   ShieldCheck,
-  CheckCircle,
   ExternalLink,
-  GitBranch,
   Copy,
   Check,
-  Clock,
   ArrowRight,
-  Hash,
-  Layers,
-  Key,
 } from "lucide-react";
 
 interface ArchiveExplorerViewProps {
   initialRecords?: ArchiveRecord[];
 }
 
-export function ArchiveExplorerView({ initialRecords }: ArchiveExplorerViewProps) {
+export function ArchiveExplorerView({ initialRecords = [] }: ArchiveExplorerViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roomFilter, setRoomFilter] = useState("all");
   const [signedOnly, setSignedOnly] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<ArchiveRecord | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
 
-  const allRecords = initialRecords || ContinuumService.getArchiveRecords();
+  const allRecords = initialRecords;
 
   const filteredRecords = allRecords.filter((rec) => {
     if (roomFilter !== "all" && rec.room.toLowerCase() !== roomFilter.toLowerCase()) {

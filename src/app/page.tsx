@@ -8,18 +8,17 @@ import { ActiveRoomsSection } from "@/components/overview/ActiveRoomsSection";
 import { PROTOCOL_PATTERNS } from "@/lib/protocol/patterns-data";
 import { ContinuumService } from "@/lib/continuum/data-service";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Database, Layers, GitBranch, Activity } from "lucide-react";
+import { ArrowRight, ShieldCheck, Database, Layers } from "lucide-react";
 
 export const revalidate = 10;
 
 export default async function HomePage() {
-  const [overview, discoveryEvents, lobbyMessages] = await Promise.all([
+  const [overview, discoveryEvents, lobbyMessages, continuumStatus] = await Promise.all([
     technocoreClient.getRooms(),
     technocoreClient.getDiscoveryEvents(),
     technocoreClient.getRoomMessages("lobby", { limit: 15 }),
+    ContinuumService.getCollectorStatus(),
   ]);
-
-  const continuumStatus = ContinuumService.getCollectorStatus();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

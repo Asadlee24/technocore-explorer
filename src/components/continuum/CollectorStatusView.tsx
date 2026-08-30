@@ -2,24 +2,20 @@
 
 import React from "react";
 import { ContinuumCollectorStatus } from "@/lib/continuum/types";
-import { ContinuumService } from "@/lib/continuum/data-service";
 import {
   Server,
   Activity,
-  ShieldCheck,
   Cpu,
   Layers,
   Database,
   GitBranch,
-  Terminal,
-  Code2,
-  Clock,
-  ArrowRight,
 } from "lucide-react";
 
-export function CollectorStatusView() {
-  const status = ContinuumService.getCollectorStatus();
+interface CollectorStatusViewProps {
+  status: ContinuumCollectorStatus;
+}
 
+export function CollectorStatusView({ status }: CollectorStatusViewProps) {
   return (
     <div className="space-y-8">
       {/* Header */}

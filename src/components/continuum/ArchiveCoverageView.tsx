@@ -2,15 +2,12 @@
 
 import React, { useState } from "react";
 import { RoomCoverage, CollectionGap } from "@/lib/continuum/types";
-import { ContinuumService } from "@/lib/continuum/data-service";
 import {
   Layers,
   AlertTriangle,
   CheckCircle,
   ShieldCheck,
-  Activity,
   Info,
-  Clock,
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
@@ -21,14 +18,24 @@ interface ArchiveCoverageViewProps {
 }
 
 export function ArchiveCoverageView({
-  coverageData,
-  gapsData,
+  coverageData = [],
+  gapsData = [],
 }: ArchiveCoverageViewProps) {
-  const coverage = coverageData || ContinuumService.getCoverage();
-  const gaps = gapsData || ContinuumService.getDetectedGaps();
+  const coverage = coverageData;
+  const gaps = gapsData;
   const [selectedRoom, setSelectedRoom] = useState<string>("general");
 
-  const activeCoverage = coverage.find((c) => c.room === selectedRoom) || coverage[0];
+  const activeCoverage = coverage.find((c) => c.room === selectedRoom) || coverage[0] || {
+    room: "lobby",
+    firstSeqObserved: 1,
+    lastSeqObserved: 1,
+    totalMessagesArchived: 1,
+    coveragePercent: 100.0,
+    gapsCount: 0,
+    lastCollectorObservation: "Live",
+    isCompleteSequence: true,
+    collectorStatus: "active",
+  };
 
   return (
     <div className="space-y-8">
@@ -68,7 +75,7 @@ export function ArchiveCoverageView({
         <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-flop-grey">
-              Monitored Room Coverage
+              Monitored Room Coverage ({coverage.length})
             </h2>
             <span className="text-[11px] font-mono text-flop-grey">
               Audited against server seq counter
@@ -133,6 +140,12 @@ export function ArchiveCoverageView({
                 </button>
               );
             })}
+
+            {coverage.length === 0 && (
+              <div className="p-8 text-center rounded-xl bg-surface border border-surface-border text-flop-grey font-mono text-xs">
+                Connecting to collector telemetry...
+              </div>
+            )}
           </div>
         </div>
 
@@ -152,50 +165,15 @@ export function ArchiveCoverageView({
             <div className="space-y-3">
               <div className="text-xs font-mono text-flop-grey">Observed Intervals & Audit:</div>
 
-              {activeCoverage.room === "general" ? (
-                <div className="space-y-2 font-mono text-xs">
-                  <div className="p-3 rounded-lg bg-surface-raised border border-flop-green/30 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-flop-green">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>seq 1 – 18,290</span>
-                    </div>
-                    <span className="text-flop-grey text-[11px]">18,290 msgs (Verified)</span>
+              <div className="space-y-2 font-mono text-xs">
+                <div className="p-3 rounded-lg bg-surface-raised border border-flop-green/30 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-flop-green">
+                    <CheckCircle className="w-3.5 h-3.5" />
+                    <span>seq {activeCoverage.firstSeqObserved} – {activeCoverage.lastSeqObserved.toLocaleString()}</span>
                   </div>
-
-                  <div className="p-3 rounded-lg bg-surface-raised border border-flop-cyan/40 space-y-1">
-                    <div className="flex items-center justify-between text-flop-cyan">
-                      <div className="flex items-center gap-2">
-                        <AlertTriangle className="w-3.5 h-3.5" />
-                        <span className="font-bold">seq 18,291 – 18,420</span>
-                      </div>
-                      <span className="text-[10px] px-1.5 py-0.2 rounded bg-surface border border-surface-border">
-                        GAP DETECTED
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-flop-grey font-sans">
-                      130 unobserved sequences during collector rate limit throttle. Because room is ephemeral, missing records rolled off live memory.
-                    </p>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-surface-raised border border-flop-green/30 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-flop-green">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>seq 18,421 – 18,510</span>
-                    </div>
-                    <span className="text-flop-grey text-[11px]">90 msgs (Active)</span>
-                  </div>
+                  <span className="text-flop-grey text-[11px]">Continuous Audit</span>
                 </div>
-              ) : (
-                <div className="space-y-2 font-mono text-xs">
-                  <div className="p-3 rounded-lg bg-surface-raised border border-flop-green/30 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-flop-green">
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      <span>seq 1 – {activeCoverage.lastSeqObserved.toLocaleString()}</span>
-                    </div>
-                    <span className="text-flop-grey text-[11px]">Continuous Audit</span>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
 
             <div className="pt-2">
@@ -231,6 +209,12 @@ export function ArchiveCoverageView({
                   </div>
                 </div>
               ))}
+
+              {gaps.length === 0 && (
+                <div className="p-4 text-center text-flop-grey font-mono text-xs bg-surface-raised rounded-xl border border-surface-border">
+                  Zero unobserved gaps detected in active collection cycles.
+                </div>
+              )}
             </div>
           </div>
         </div>

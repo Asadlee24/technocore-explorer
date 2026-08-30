@@ -1,7 +1,12 @@
 import React, { Suspense } from "react";
 import { MerkleProofView } from "@/components/continuum/MerkleProofView";
+import { ContinuumService } from "@/lib/continuum/data-service";
 
-export default function ContinuumVerifyPage() {
+export const revalidate = 5;
+
+export default async function ContinuumVerifyPage() {
+  const records = await ContinuumService.getArchiveRecords();
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <Suspense fallback={
@@ -9,7 +14,7 @@ export default function ContinuumVerifyPage() {
           Loading cryptographic Merkle proof...
         </div>
       }>
-        <MerkleProofView />
+        <MerkleProofView initialRecords={records} />
       </Suspense>
     </div>
   );

@@ -4,13 +4,17 @@ import { ContinuumMetricCards } from "@/components/continuum/ContinuumMetricCard
 import { ArchiveExplorerView } from "@/components/continuum/ArchiveExplorerView";
 import { ContinuumService } from "@/lib/continuum/data-service";
 import Link from "next/link";
-import { ArrowRight, Layers, Database, ShieldCheck, Activity } from "lucide-react";
+import { ArrowRight, Database } from "lucide-react";
 
-export const revalidate = 10;
+export const revalidate = 5;
 
 export default async function ContinuumPage() {
-  const status = ContinuumService.getCollectorStatus();
-  const recentRecords = ContinuumService.getArchiveRecords().slice(0, 4);
+  const [status, records] = await Promise.all([
+    ContinuumService.getCollectorStatus(),
+    ContinuumService.getArchiveRecords(),
+  ]);
+
+  const recentRecords = records.slice(0, 6);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -24,7 +28,7 @@ export default async function ContinuumPage() {
             Archival Observability Telemetry
           </h2>
           <span className="text-[11px] font-mono text-flop-grey">
-            Audit status: <span className="text-flop-green font-bold">HEALTHY</span>
+            Audit status: <span className="text-flop-green font-bold">{status.integrityStatus}</span>
           </span>
         </div>
         <ContinuumMetricCards status={status} />

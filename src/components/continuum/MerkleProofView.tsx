@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArchiveRecord, MerkleVerificationResult } from "@/lib/continuum/types";
-import { ContinuumService } from "@/lib/continuum/data-service";
 import { verifyMerkleProof, computeMessageHash, computeLeafHash } from "@/lib/continuum/merkle";
 import {
   ShieldCheck,
@@ -24,11 +23,12 @@ import {
 
 interface MerkleProofViewProps {
   initialRecordId?: string;
+  initialRecords?: ArchiveRecord[];
 }
 
-export function MerkleProofView({ initialRecordId }: MerkleProofViewProps) {
+export function MerkleProofView({ initialRecordId, initialRecords = [] }: MerkleProofViewProps) {
   const searchParams = useSearchParams();
-  const targetId = initialRecordId || searchParams.get("id") || "rec-18510";
+  const targetId = initialRecordId || searchParams.get("id") || "";
 
   const [selectedRecordId, setSelectedRecordId] = useState(targetId);
   const [activeTab, setActiveTab] = useState<"visual" | "technical">("visual");
@@ -36,8 +36,8 @@ export function MerkleProofView({ initialRecordId }: MerkleProofViewProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
-  const records = ContinuumService.getArchiveRecords();
-  const currentRecord = ContinuumService.getRecordById(selectedRecordId) || records[0];
+  const records = initialRecords;
+  const currentRecord = records.find((r) => r.id === selectedRecordId) || records[0] || null;
 
   // Perform step-by-step cryptographic Merkle verification
   const runVerification = (record: ArchiveRecord) => {
@@ -71,6 +71,17 @@ export function MerkleProofView({ initialRecordId }: MerkleProofViewProps) {
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
   };
+
+  if (!currentRecord) {
+    return (
+      <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border space-y-2">
+        <div className="text-sm font-bold text-flop-ice">No Archive Records Available</div>
+        <p className="text-xs text-flop-grey max-w-sm mx-auto">
+          The archive database has no records yet. Run the collector to begin ingesting Technocore messages.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
