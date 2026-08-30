@@ -1,11 +1,17 @@
 import { ArchiveRecord, CollectionGap, RoomCoverage, ContinuumCollectorStatus } from "./types";
-import { ContinuumDatabase, DbMessageRow, DbRoomRow, DbEpochRow, DbGapRow } from "./db";
+import { ContinuumDatabase, DbMessageRow, DbRoomRow, DbEpochRow, DbGapRow, LiveContinuumStats } from "./db";
 import { MerkleEngine } from "./merkle-engine";
 import { computeMessageHash, computeLeafHash } from "./merkle";
 import { canonicalizeSingleLine } from "../protocol/parser";
 import { technocoreClient } from "../protocol/client";
 
 export class ContinuumService {
+  /**
+   * Get exact live counts and status from Supabase
+   */
+  static async getLiveStats(): Promise<LiveContinuumStats> {
+    return ContinuumDatabase.getLiveStats();
+  }
   /**
    * Search archive records with multiple filters (backed by real database & live ingestion fallback)
    */

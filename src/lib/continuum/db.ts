@@ -93,6 +93,15 @@ export interface DbTelemetryRow {
   recorded_at: string;
 }
 
+export interface LiveContinuumStats {
+  messagesArchived: number;
+  roomsMonitored: number;
+  epochsSealed: number;
+  collectorStatus: "ONLINE" | "STANDBY" | "OFFLINE";
+  latestMerkleRoot: string;
+  lastUpdated: string;
+}
+
 export class ContinuumDatabase {
   private static get client(): SupabaseClient {
     if (!_adminClient) _adminClient = getAdminClient();
@@ -112,6 +121,52 @@ export class ContinuumDatabase {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       return { ok: false, message: msg };
+    }
+  }
+
+  /**
+   * Get exact live metrics from Supabase
+   */
+  static async getLiveStats(): Promise<LiveContinuumStats> {
+    try {
+      const [msgRes, roomRes, blockRes, telRes, latestBlockRes] = await Promise.all([
+        this.client.from("continuum_messages").select("*", { count: "exact", head: true }),
+        this.client.from("continuum_rooms").select("*", { count: "exact", head: true }),
+        this.client.from("continuum_merkle_blocks").select("*", { count: "exact", head: true }),
+        this.client.from("continuum_collector_telemetry").select("*").order("recorded_at", { ascending: false }).limit(1),
+        this.client.from("continuum_merkle_blocks").select("merkle_root").order("block_id", { ascending: false }).limit(1),
+      ]);
+
+      const telemetry = telRes.data && telRes.data.length > 0 ? (telRes.data[0] as DbTelemetryRow) : null;
+      const latestBlock = latestBlockRes.data && latestBlockRes.data.length > 0 ? (latestBlockRes.data[0] as DbEpochRow) : null;
+
+      // Determine if collector is active within last 2 minutes
+      let status: "ONLINE" | "STANDBY" | "OFFLINE" = "OFFLINE";
+      if (telemetry) {
+        const recordedTime = new Date(telemetry.recorded_at).getTime();
+        const now = Date.now();
+        const diffSec = (now - recordedTime) / 1000;
+        status = diffSec < 120 ? "ONLINE" : diffSec < 600 ? "STANDBY" : "OFFLINE";
+      }
+
+      return {
+        messagesArchived: msgRes.count ?? 0,
+        roomsMonitored: roomRes.count ?? 0,
+        epochsSealed: blockRes.count ?? 0,
+        collectorStatus: status,
+        latestMerkleRoot: latestBlock?.merkle_root || "None",
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (err) {
+      console.error("DB getLiveStats error:", err);
+      return {
+        messagesArchived: 0,
+        roomsMonitored: 0,
+        epochsSealed: 0,
+        collectorStatus: "STANDBY",
+        latestMerkleRoot: "None",
+        lastUpdated: new Date().toISOString(),
+      };
     }
   }
 

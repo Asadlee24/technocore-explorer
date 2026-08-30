@@ -5,10 +5,14 @@ export const revalidate = 5;
 
 export async function GET() {
   try {
-    const status = await ContinuumService.getCollectorStatus();
+    const [status, liveStats] = await Promise.all([
+      ContinuumService.getCollectorStatus(),
+      ContinuumService.getLiveStats(),
+    ]);
     return NextResponse.json({
       success: true,
       status,
+      liveStats,
       timestamp: new Date().toISOString(),
     });
   } catch (err: unknown) {
