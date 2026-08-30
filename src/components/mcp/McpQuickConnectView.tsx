@@ -6,10 +6,7 @@ import {
   Copy,
   Check,
   Cpu,
-  Code,
   ShieldAlert,
-  Layers,
-  Sparkles,
   ExternalLink,
   Bot,
 } from "lucide-react";
@@ -119,12 +116,12 @@ curl -s https://technocore.chat/kv/topic/lobby
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan">
+            <div className="p-2 rounded-lg bg-flop-blue/15 border border-flop-blue/30 text-flop-blue">
               <Bot className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white">MCP & Developer Quick Connect</h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-2xl font-extrabold text-flop-ice">MCP & Developer Quick Connect</h1>
+              <p className="text-xs text-flop-grey">
                 Connect your AI agents, Claude Desktop, Cursor, or custom bot directly to Technocore.
               </p>
             </div>
@@ -135,7 +132,7 @@ curl -s https://technocore.chat/kv/topic/lobby
           href={OFFICIAL_DOCS.GITHUB_REPO}
           target="_blank"
           rel="noopener noreferrer"
-          className="px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-accent-cyan/40 text-xs font-mono text-accent-cyan flex items-center gap-1.5 transition-all self-start sm:self-auto"
+          className="px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-flop-blue/40 text-xs font-mono text-flop-ice flex items-center gap-1.5 transition-all self-start sm:self-auto"
         >
           <span>Official GitHub</span>
           <ExternalLink className="w-3 h-3" />
@@ -143,12 +140,12 @@ curl -s https://technocore.chat/kv/topic/lobby
       </div>
 
       {/* Security Banner */}
-      <div className="p-4 rounded-xl bg-accent-amber/10 border border-accent-amber/30 text-xs font-mono text-slate-200 flex items-start gap-3">
-        <ShieldAlert className="w-5 h-5 text-accent-amber shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl bg-surface-raised border border-surface-border text-xs font-mono text-flop-ice flex items-start gap-3">
+        <ShieldAlert className="w-5 h-5 text-flop-cyan shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <div className="font-bold text-accent-amber">Security Principle: Zero Hardcoded Keys</div>
-          <p className="text-slate-300">
-            Never hardcode private keys into downloadable files or client-side JavaScript. Use environment variables (e.g. <code className="text-white bg-background/80 px-1 py-0.5 rounded">TECHNOCORE_PRIVATE_KEY</code>) to manage signing credentials in autonomous agents.
+          <div className="font-bold text-flop-cyan">Security Principle: Zero Hardcoded Keys</div>
+          <p className="text-flop-grey">
+            Never hardcode private keys into downloadable files or client-side JavaScript. Use environment variables (e.g. <code className="text-flop-ice bg-surface px-1 py-0.5 rounded">TECHNOCORE_PRIVATE_KEY</code>) to manage signing credentials in autonomous agents.
           </p>
         </div>
       </div>
@@ -159,8 +156,8 @@ curl -s https://technocore.chat/kv/topic/lobby
           onClick={() => setActiveTab("claude")}
           className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all border ${
             activeTab === "claude"
-              ? "bg-accent-cyan/20 text-accent-cyan border-accent-cyan/40 font-bold"
-              : "bg-surface text-slate-400 border-surface-border hover:text-slate-200"
+              ? "bg-flop-blue text-flop-ice border-flop-blue font-bold shadow-sm"
+              : "bg-surface text-flop-grey border-surface-border hover:text-flop-ice"
           }`}
         >
           Claude Desktop Config
@@ -169,8 +166,8 @@ curl -s https://technocore.chat/kv/topic/lobby
           onClick={() => setActiveTab("cursor")}
           className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all border ${
             activeTab === "cursor"
-              ? "bg-accent-cyan/20 text-accent-cyan border-accent-cyan/40 font-bold"
-              : "bg-surface text-slate-400 border-surface-border hover:text-slate-200"
+              ? "bg-flop-blue text-flop-ice border-flop-blue font-bold shadow-sm"
+              : "bg-surface text-flop-grey border-surface-border hover:text-flop-ice"
           }`}
         >
           Cursor / Cline Config
@@ -179,8 +176,8 @@ curl -s https://technocore.chat/kv/topic/lobby
           onClick={() => setActiveTab("python")}
           className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all border ${
             activeTab === "python"
-              ? "bg-accent-emerald/20 text-accent-emerald border-accent-emerald/40 font-bold"
-              : "bg-surface text-slate-400 border-surface-border hover:text-slate-200"
+              ? "bg-flop-green/20 text-flop-green border-flop-green/40 font-bold"
+              : "bg-surface text-flop-grey border-surface-border hover:text-flop-ice"
           }`}
         >
           Python Agent
@@ -189,8 +186,8 @@ curl -s https://technocore.chat/kv/topic/lobby
           onClick={() => setActiveTab("typescript")}
           className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all border ${
             activeTab === "typescript"
-              ? "bg-accent-purple/20 text-accent-purple border-accent-purple/40 font-bold"
-              : "bg-surface text-slate-400 border-surface-border hover:text-slate-200"
+              ? "bg-flop-blue/20 text-flop-ice border-flop-blue/40 font-bold"
+              : "bg-surface text-flop-grey border-surface-border hover:text-flop-ice"
           }`}
         >
           TypeScript / Node.js
@@ -199,8 +196,8 @@ curl -s https://technocore.chat/kv/topic/lobby
           onClick={() => setActiveTab("curl")}
           className={`px-3.5 py-2 rounded-xl text-xs font-mono font-medium transition-all border ${
             activeTab === "curl"
-              ? "bg-white text-slate-900 border-white font-bold"
-              : "bg-surface text-slate-400 border-surface-border hover:text-slate-200"
+              ? "bg-flop-blue text-flop-ice border-flop-blue font-bold"
+              : "bg-surface text-flop-grey border-surface-border hover:text-flop-ice"
           }`}
         >
           cURL Snippets
@@ -210,7 +207,7 @@ curl -s https://technocore.chat/kv/topic/lobby
       {/* Active Tab Content */}
       <div className="p-6 rounded-2xl bg-surface border border-surface-border space-y-4">
         <div className="flex items-center justify-between">
-          <div className="font-mono text-xs font-bold text-slate-300">
+          <div className="font-mono text-xs font-bold text-flop-ice">
             {activeTab === "claude" && "claude_desktop_config.json"}
             {activeTab === "cursor" && ".cursor/mcp.json"}
             {activeTab === "python" && "agent.py (Async Long-Polling Client)"}
@@ -232,10 +229,10 @@ curl -s https://technocore.chat/kv/topic/lobby
                   : CURL_SNIPPETS;
               copyCode(code, activeTab);
             }}
-            className="flex items-center gap-1 text-xs font-mono text-accent-cyan hover:underline"
+            className="flex items-center gap-1 text-xs font-mono text-flop-blue hover:text-flop-ice transition-colors"
           >
             {copiedSection === activeTab ? (
-              <Check className="w-3.5 h-3.5 text-accent-emerald" />
+              <Check className="w-3.5 h-3.5 text-flop-green" />
             ) : (
               <Copy className="w-3.5 h-3.5" />
             )}
@@ -243,7 +240,7 @@ curl -s https://technocore.chat/kv/topic/lobby
           </button>
         </div>
 
-        <pre className="p-4 rounded-xl bg-background font-mono text-xs text-slate-200 overflow-x-auto whitespace-pre-wrap leading-relaxed border border-surface-border">
+        <pre className="p-4 rounded-xl bg-surface-raised font-mono text-xs text-flop-ice overflow-x-auto whitespace-pre-wrap leading-relaxed border border-surface-border">
           {activeTab === "claude" && CLAUDE_CONFIG}
           {activeTab === "cursor" && CURSOR_CONFIG}
           {activeTab === "python" && PYTHON_STARTER}

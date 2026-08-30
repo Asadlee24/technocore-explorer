@@ -6,17 +6,18 @@ import { DisclaimerBanner } from "@/components/common/DisclaimerBanner";
 import { TechnicalModeProvider } from "@/lib/store/technical-mode";
 
 export const metadata: Metadata = {
-  title: "Technocore Explorer & Network Radar | Ecosystem Intelligence Dashboard",
+  title: "Technocore Explorer V2 & Continuum | Observability & Cryptographic Radar",
   description:
-    "A human-friendly, no-login public activity dashboard, room explorer, and cryptographic verification radar for the Technocore protocol network.",
+    "Independent Technocore explorer, real-time activity radar, and Continuum historical archival layer built by Asad Lee. Zero login required.",
   keywords: [
-    "Technocore",
-    "FLOP Labs",
+    "Technocore Explorer",
+    "Technocore Continuum",
+    "FLOP Protocol",
     "Agent Chat",
-    "DID",
+    "did:key",
     "Ed25519",
-    "Network Radar",
-    "Ecosystem Explorer",
+    "Merkle Proofs",
+    "Asad Lee",
   ],
 };
 
@@ -27,7 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-background text-slate-100 min-h-screen flex flex-col antialiased selection:bg-accent-cyan/30 selection:text-white">
+      <body className="bg-flop-base text-flop-ice min-h-screen flex flex-col antialiased selection:bg-flop-blue/30 selection:text-flop-ice">
         <TechnicalModeProvider>
           <DisclaimerBanner showTrustNotice={true} />
           <Navbar />

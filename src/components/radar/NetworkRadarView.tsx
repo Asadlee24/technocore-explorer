@@ -135,20 +135,20 @@ export function NetworkRadarView({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-accent-emerald/10 border border-accent-emerald/30 text-accent-emerald">
+            <div className="p-2 rounded-lg bg-flop-green/15 border border-flop-green/30 text-flop-green">
               <Radio className="w-5 h-5 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white">Live Network Radar</h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-2xl font-extrabold text-flop-ice">Live Network Radar</h1>
+              <p className="text-xs text-flop-grey">
                 Real-time observational radar tracking room creation pulses, signed agent streams, and protocol frequency.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs font-mono text-slate-300">
-          <span className="w-2 h-2 rounded-full bg-accent-emerald animate-ping" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs font-mono text-flop-ice">
+          <span className="w-2 h-2 rounded-full bg-flop-green animate-ping" />
           <span>RADAR SWEEP: 360° ACTIVE</span>
         </div>
       </div>
@@ -158,24 +158,24 @@ export function NetworkRadarView({
         {/* Visual Radar Scope Screen */}
         <div className="lg:col-span-7 p-6 rounded-2xl bg-surface border border-surface-border flex flex-col items-center justify-center relative overflow-hidden min-h-[460px]">
           {/* Radar Background Circles */}
-          <div className="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full border border-accent-emerald/20 flex items-center justify-center bg-radial from-accent-emerald/5 to-transparent">
+          <div className="relative w-72 h-72 sm:w-96 sm:h-96 rounded-full border border-flop-blue/30 flex items-center justify-center bg-radial from-flop-blue/5 to-transparent">
             {/* Concentric rings */}
-            <div className="w-3/4 h-3/4 rounded-full border border-accent-emerald/15 flex items-center justify-center">
-              <div className="w-2/3 h-2/3 rounded-full border border-accent-emerald/15 flex items-center justify-center">
-                <div className="w-1/2 h-1/2 rounded-full border border-accent-emerald/20 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-accent-emerald shadow-[0_0_10px_#00ffaa]" />
+            <div className="w-3/4 h-3/4 rounded-full border border-flop-blue/20 flex items-center justify-center">
+              <div className="w-2/3 h-2/3 rounded-full border border-flop-blue/20 flex items-center justify-center">
+                <div className="w-1/2 h-1/2 rounded-full border border-flop-blue/30 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-flop-green" />
                 </div>
               </div>
             </div>
 
             {/* Crosshairs */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-full h-px bg-accent-emerald/15" />
-              <div className="h-full w-px bg-accent-emerald/15 absolute" />
+              <div className="w-full h-px bg-flop-blue/20" />
+              <div className="h-full w-px bg-flop-blue/20 absolute" />
             </div>
 
             {/* Rotating Radar Sweep Beam */}
-            <div className="absolute inset-0 rounded-full animate-[spin_4s_linear_infinite] pointer-events-none origin-center bg-gradient-to-r from-accent-emerald/20 via-transparent to-transparent [clip-path:polygon(50%_50%,_100%_0,_100%_50%)]" />
+            <div className="absolute inset-0 rounded-full animate-[spin_3.5s_linear_infinite] pointer-events-none origin-center bg-gradient-to-r from-flop-green/20 via-transparent to-transparent [clip-path:polygon(50%_50%,_100%_0,_100%_50%)]" />
 
             {/* Radar Blips */}
             {filteredBlips.map((blip) => {
@@ -195,10 +195,10 @@ export function NetworkRadarView({
                   }}
                   className={`absolute w-3.5 h-3.5 rounded-full transition-all group z-10 ${
                     blip.type === "room"
-                      ? "bg-accent-cyan shadow-[0_0_8px_#00f0ff]"
+                      ? "bg-flop-blue"
                       : blip.type === "signed"
-                      ? "bg-accent-emerald shadow-[0_0_8px_#00ffaa]"
-                      : "bg-accent-purple shadow-[0_0_6px_#b026ff]"
+                      ? "bg-flop-green"
+                      : "bg-flop-ice"
                   } ${isSelected ? "ring-2 ring-white scale-150" : "hover:scale-125"}`}
                   title={`${blip.label} (${new Date(blip.ts).toLocaleTimeString()})`}
                 >
@@ -213,15 +213,15 @@ export function NetworkRadarView({
           {/* Radar Legend */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-xs font-mono">
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-accent-cyan shadow-[0_0_6px_#00f0ff]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-flop-blue" />
               <span className="text-slate-300">Room Creation (/r/events)</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-accent-emerald shadow-[0_0_6px_#00ffaa]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-flop-green" />
               <span className="text-slate-300">Signed Agent Msg</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-accent-purple shadow-[0_0_6px_#b026ff]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-flop-ice" />
               <span className="text-slate-300">Broadcast Channel</span>
             </div>
           </div>
@@ -231,22 +231,22 @@ export function NetworkRadarView({
         <div className="lg:col-span-5 space-y-4">
           {/* Target Inspector Card */}
           {selectedBlip ? (
-            <div className="p-5 rounded-2xl bg-surface border border-accent-emerald/30 shadow-[0_0_20px_rgba(0,255,170,0.08)] space-y-3">
+            <div className="p-5 rounded-2xl bg-surface border border-flop-blue/40 shadow-sm space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-accent-emerald flex items-center gap-1.5">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-flop-green flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5" />
                   <span>Target Locked</span>
                 </span>
-                <span className="text-[11px] font-mono text-slate-400">
+                <span className="text-[11px] font-mono text-flop-grey">
                   {new Date(selectedBlip.ts).toLocaleTimeString()}
                 </span>
               </div>
 
               <div>
-                <h3 className="font-bold text-base text-white font-mono">
+                <h3 className="font-bold text-base text-flop-ice font-mono">
                   {selectedBlip.label}
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-flop-grey mt-0.5 font-sans">
                   {selectedBlip.type === "room"
                     ? "Discovered in official server events stream."
                     : "Cryptographic payload detected in channel buffer."}
@@ -254,15 +254,15 @@ export function NetworkRadarView({
               </div>
 
               <div className="p-3 rounded-lg bg-surface-raised font-mono text-xs text-slate-300 space-y-1">
-                <div>Room: <span className="text-white">/r/{selectedBlip.room}</span></div>
-                <div>seq: <span className="text-accent-cyan">#{selectedBlip.seq}</span></div>
-                <div>from: <span className="text-slate-400 truncate block">{selectedBlip.from}</span></div>
+                <div>Room: <span className="text-flop-ice">/r/{selectedBlip.room}</span></div>
+                <div>seq: <span className="text-flop-blue">#{selectedBlip.seq}</span></div>
+                <div>from: <span className="text-flop-grey truncate block">{selectedBlip.from}</span></div>
               </div>
 
               <div className="pt-2 flex items-center gap-2">
                 <Link
                   href={`/rooms/${encodeURIComponent(selectedBlip.room)}`}
-                  className="flex-1 py-2 px-3 rounded-lg bg-accent-cyan/15 text-accent-cyan border border-accent-cyan/30 hover:bg-accent-cyan/25 transition-all text-xs font-mono font-bold flex items-center justify-center gap-1.5"
+                  className="flex-1 py-2 px-3 rounded-lg bg-flop-blue text-flop-ice hover:bg-flop-blue/90 transition-all text-xs font-mono font-bold flex items-center justify-center gap-1.5"
                 >
                   <span>Open Room /r/{selectedBlip.room}</span>
                   <ArrowUpRight className="w-3.5 h-3.5" />
@@ -271,7 +271,7 @@ export function NetworkRadarView({
                 {selectedBlip.from.startsWith("did:key:") && (
                   <Link
                     href={`/agents/${encodeURIComponent(selectedBlip.from)}`}
-                    className="py-2 px-3 rounded-lg bg-surface-raised border border-surface-border hover:border-slate-500 text-xs font-mono text-slate-200 transition-all"
+                    className="py-2 px-3 rounded-lg bg-surface-raised border border-surface-border hover:border-flop-blue/40 text-xs font-mono text-flop-ice transition-all"
                   >
                     DID Profile
                   </Link>
@@ -279,19 +279,19 @@ export function NetworkRadarView({
               </div>
             </div>
           ) : (
-            <div className="p-8 text-center rounded-2xl bg-surface border border-surface-border text-slate-400 text-xs font-mono">
+            <div className="p-8 text-center rounded-2xl bg-surface border border-surface-border text-flop-grey text-xs font-mono">
               Click any blip on the radar scope to lock target.
             </div>
           )}
 
           {/* Filter Tabs */}
-          <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-surface-border text-xs">
+          <div className="flex items-center gap-1 bg-surface p-1 rounded-xl border border-surface-border text-xs font-mono">
             <button
               onClick={() => setActiveFilter("all")}
               className={`flex-1 py-1.5 rounded-lg font-medium transition-all ${
                 activeFilter === "all"
-                  ? "bg-white text-slate-900 font-bold"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-flop-blue text-flop-ice font-bold"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               All Signals ({blips.length})
@@ -300,8 +300,8 @@ export function NetworkRadarView({
               onClick={() => setActiveFilter("room")}
               className={`flex-1 py-1.5 rounded-lg font-medium transition-all ${
                 activeFilter === "room"
-                  ? "bg-accent-cyan/20 text-accent-cyan font-bold"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-flop-blue text-flop-ice font-bold"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               Creations
@@ -310,8 +310,8 @@ export function NetworkRadarView({
               onClick={() => setActiveFilter("signed")}
               className={`flex-1 py-1.5 rounded-lg font-medium transition-all ${
                 activeFilter === "signed"
-                  ? "bg-accent-emerald/20 text-accent-emerald font-bold"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-flop-green/20 text-flop-green font-bold border border-flop-green/30"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               Signatures
@@ -327,15 +327,15 @@ export function NetworkRadarView({
                 onClick={() => setSelectedBlip(b)}
                 className={`w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-2 ${
                   selectedBlip?.id === b.id
-                    ? "bg-surface-raised border-accent-cyan"
-                    : "bg-surface border-surface-border hover:border-slate-600"
+                    ? "bg-surface-raised border-flop-blue"
+                    : "bg-surface border-surface-border hover:border-flop-blue/40"
                 }`}
               >
                 <div className="truncate">
-                  <div className="text-xs font-mono font-bold text-slate-200 truncate">
+                  <div className="text-xs font-mono font-bold text-flop-ice truncate">
                     {b.label}
                   </div>
-                  <div className="text-[10px] font-mono text-slate-400">
+                  <div className="text-[10px] font-mono text-flop-grey">
                     seq #{b.seq} • {new Date(b.ts).toLocaleTimeString()}
                   </div>
                 </div>
@@ -343,10 +343,10 @@ export function NetworkRadarView({
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     b.type === "room"
-                      ? "bg-accent-cyan"
+                      ? "bg-flop-blue"
                       : b.type === "signed"
-                      ? "bg-accent-emerald"
-                      : "bg-accent-purple"
+                      ? "bg-flop-green"
+                      : "bg-flop-ice"
                   }`}
                 />
               </button>

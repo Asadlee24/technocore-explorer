@@ -17,8 +17,8 @@ import {
   ShieldCheck,
   Binary,
   Layers,
-  Sparkles,
   ArrowUpRight,
+  Database,
 } from "lucide-react";
 import { useTechnicalMode } from "@/lib/store/technical-mode";
 
@@ -207,12 +207,12 @@ export function LiveFeedView({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan">
+            <div className="p-2 rounded-lg bg-flop-blue/15 border border-flop-blue/30 text-flop-blue">
               <Activity className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white">Live Ecosystem Activity Feed</h1>
-              <p className="text-xs text-slate-400">
+              <h1 className="text-2xl font-extrabold text-flop-ice">Live Ecosystem Activity Feed</h1>
+              <p className="text-xs text-flop-grey">
                 Translating raw room buffers, cryptographic nonces, and append logs into human-readable events.
               </p>
             </div>
@@ -221,8 +221,8 @@ export function LiveFeedView({
 
         {/* Live Indicator */}
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs font-mono">
-          <span className="w-2 h-2 rounded-full bg-accent-emerald animate-ping" />
-          <span className="text-slate-300">STREAM ACTIVE ({items.length} OBSERVED)</span>
+          <span className="w-2 h-2 rounded-full bg-flop-green animate-pulse" />
+          <span className="text-flop-ice font-semibold">STREAM ACTIVE ({items.length} OBSERVED)</span>
         </div>
       </div>
 
@@ -230,24 +230,24 @@ export function LiveFeedView({
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface p-3 rounded-xl border border-surface-border">
         {/* Search */}
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-flop-grey absolute left-3 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Search activity feed (DID, room, message content)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-surface-raised border border-surface-border text-xs text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-accent-cyan/50 font-mono"
+            className="w-full pl-9 pr-4 py-2 rounded-lg bg-surface-raised border border-surface-border text-xs text-flop-ice placeholder:text-flop-grey focus:outline-none focus:border-flop-blue font-mono"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex flex-wrap items-center gap-1 bg-surface-raised p-1 rounded-lg border border-surface-border text-xs">
+        <div className="flex flex-wrap items-center gap-1 bg-surface-raised p-1 rounded-lg border border-surface-border text-xs font-mono">
           <button
             onClick={() => setFilterType("all")}
             className={`px-3 py-1.5 rounded-md font-medium transition-all ${
               filterType === "all"
-                ? "bg-accent-cyan/20 text-accent-cyan font-bold"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-flop-blue text-flop-ice font-bold"
+                : "text-flop-grey hover:text-flop-ice"
             }`}
           >
             All Activity
@@ -256,8 +256,8 @@ export function LiveFeedView({
             onClick={() => setFilterType("created")}
             className={`px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${
               filterType === "created"
-                ? "bg-accent-cyan/20 text-accent-cyan font-bold"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-flop-blue text-flop-ice font-bold"
+                : "text-flop-grey hover:text-flop-ice"
             }`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
@@ -267,8 +267,8 @@ export function LiveFeedView({
             onClick={() => setFilterType("signed")}
             className={`px-3 py-1.5 rounded-md font-medium transition-all flex items-center gap-1.5 ${
               filterType === "signed"
-                ? "bg-accent-emerald/20 text-accent-emerald font-bold"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-flop-green/20 text-flop-green font-bold border border-flop-green/40"
+                : "text-flop-grey hover:text-flop-ice"
             }`}
           >
             <ShieldCheck className="w-3.5 h-3.5" />
@@ -286,7 +286,7 @@ export function LiveFeedView({
           return (
             <div
               key={item.id}
-              className="p-4 rounded-xl bg-surface border border-surface-border hover:border-surface-highlight transition-all space-y-3 group relative overflow-hidden"
+              className="p-4 rounded-xl bg-surface border border-surface-border hover:border-flop-blue/40 transition-all space-y-3 group relative overflow-hidden"
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 {/* Event header */}
@@ -294,10 +294,10 @@ export function LiveFeedView({
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                       isRoomCreated
-                        ? "bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20"
+                        ? "bg-flop-blue/15 text-flop-blue border border-flop-blue/30"
                         : item.type === "signed_message"
-                        ? "bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/20"
-                        : "bg-slate-800 text-slate-300 border border-slate-700"
+                        ? "bg-flop-green/15 text-flop-green border border-flop-green/30"
+                        : "bg-surface-raised text-flop-ice border border-surface-border"
                     }`}
                   >
                     {isRoomCreated ? (
@@ -311,7 +311,7 @@ export function LiveFeedView({
 
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-white text-sm">
+                      <span className="font-bold text-flop-ice text-sm">
                         {item.humanTitle}
                       </span>
                       {isRoomCreated ? (
@@ -322,7 +322,7 @@ export function LiveFeedView({
                         <HumanBadge type="nick" label={agent.badgeLabel} size="sm" />
                       )}
                     </div>
-                    <div className="text-[11px] font-mono text-slate-400 flex items-center gap-2 mt-0.5">
+                    <div className="text-[11px] font-mono text-flop-grey flex items-center gap-2 mt-0.5">
                       <span>Room: /r/{item.room}</span>
                       <span>•</span>
                       <span>seq #{item.seq}</span>
@@ -346,7 +346,7 @@ export function LiveFeedView({
 
                   <Link
                     href={`/rooms/${encodeURIComponent(item.room)}`}
-                    className="p-1.5 rounded-lg bg-surface-raised border border-surface-border text-slate-400 hover:text-accent-cyan hover:border-accent-cyan/30 transition-all text-xs font-mono flex items-center gap-1"
+                    className="p-1.5 rounded-lg bg-surface-raised border border-surface-border text-flop-grey hover:text-flop-ice hover:border-flop-blue/40 transition-all text-xs font-mono flex items-center gap-1"
                     title="Open room explorer"
                   >
                     <span>/r/{item.room}</span>
@@ -357,24 +357,24 @@ export function LiveFeedView({
 
               {/* Message Content */}
               {!isRoomCreated && (
-                <div className="p-3 rounded-lg bg-surface-raised/70 border border-surface-border text-xs font-mono text-slate-200 break-words">
+                <div className="p-3 rounded-lg bg-surface-raised border border-surface-border text-xs font-mono text-flop-ice break-words">
                   {item.text}
                 </div>
               )}
 
-              {/* Technical Drawer (When Technical Mode is ON or on expand) */}
+              {/* Technical Drawer */}
               {isTechnicalMode && (
-                <div className="p-3 rounded-lg bg-background/80 border border-surface-highlight font-mono text-[11px] text-slate-400 space-y-1 animate-in fade-in">
-                  <div className="text-accent-cyan font-semibold">Technical Protocol Inspection:</div>
-                  <div>from: <span className="text-slate-300 break-all">{item.from}</span></div>
-                  <div>room: <span className="text-slate-300">/r/{item.room}</span></div>
+                <div className="p-3 rounded-lg bg-surface-raised border border-surface-border font-mono text-[11px] text-flop-grey space-y-1 animate-in fade-in">
+                  <div className="text-flop-ice font-semibold">Technical Protocol Inspection:</div>
+                  <div>from: <span className="text-flop-ice break-all">{item.from}</span></div>
+                  <div>room: <span className="text-flop-ice">/r/{item.room}</span></div>
                   {item.nonce !== undefined && (
-                    <div>nonce: <span className="text-slate-300">{String(item.nonce)}</span></div>
+                    <div>nonce: <span className="text-flop-ice">{String(item.nonce)}</span></div>
                   )}
                   {item.sig && (
-                    <div>sig: <span className="text-slate-300 break-all">{item.sig}</span></div>
+                    <div>sig: <span className="text-flop-grey break-all">{item.sig}</span></div>
                   )}
-                  <div>timestamp: <span className="text-slate-300">{item.ts}</span></div>
+                  <div>timestamp: <span className="text-flop-ice">{item.ts}</span></div>
                 </div>
               )}
             </div>
@@ -382,7 +382,7 @@ export function LiveFeedView({
         })}
 
         {filteredItems.length === 0 && (
-          <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border text-slate-400 font-mono text-xs">
+          <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border text-flop-grey font-mono text-xs">
             No events match current filter & search criteria.
           </div>
         )}

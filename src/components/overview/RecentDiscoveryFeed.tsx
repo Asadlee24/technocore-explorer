@@ -65,33 +65,35 @@ export function RecentDiscoveryFeed({
   }, [activeTab]);
 
   return (
-    <div className="p-5 rounded-2xl bg-surface border border-surface-border space-y-4">
+    <div className="p-5 sm:p-6 rounded-2xl bg-surface border border-surface-border space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 rounded-full bg-accent-emerald animate-pulse" />
-          <h3 className="font-bold text-white text-base">Network Live Activity Pulse</h3>
+          <div className="w-2.5 h-2.5 rounded-full bg-flop-green animate-pulse" />
+          <h3 className="font-bold text-flop-ice text-base">Network Live Activity Pulse</h3>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex items-center gap-1 bg-surface-raised p-1 rounded-lg border border-surface-border text-xs">
+        <div className="flex items-center gap-1 bg-surface-raised p-1 rounded-lg border border-surface-border text-xs font-mono">
           <button
+            type="button"
             onClick={() => setActiveTab("discovery")}
             className={`px-3 py-1 rounded-md font-medium transition-all flex items-center gap-1.5 ${
               activeTab === "discovery"
-                ? "bg-accent-cyan/20 text-accent-cyan"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-flop-blue text-flop-ice font-bold"
+                : "text-flop-grey hover:text-flop-ice"
             }`}
           >
             <PlusCircle className="w-3.5 h-3.5" />
             <span>New Rooms (/r/events)</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveTab("lobby")}
             className={`px-3 py-1 rounded-md font-medium transition-all flex items-center gap-1.5 ${
               activeTab === "lobby"
-                ? "bg-accent-emerald/20 text-accent-emerald"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-flop-blue text-flop-ice font-bold"
+                : "text-flop-grey hover:text-flop-ice"
             }`}
           >
             <MessageSquare className="w-3.5 h-3.5" />
@@ -107,20 +109,20 @@ export function RecentDiscoveryFeed({
             events.map((evt) => (
               <div
                 key={evt.seq}
-                className="p-3 rounded-xl bg-surface-raised/60 border border-surface-border/80 hover:border-accent-cyan/30 transition-all flex items-center justify-between gap-3 text-xs"
+                className="p-3 rounded-xl bg-surface-raised border border-surface-border hover:border-flop-blue/40 transition-all flex items-center justify-between gap-3 text-xs"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-accent-cyan/10 border border-accent-cyan/20 text-accent-cyan flex items-center justify-center shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-flop-blue/15 border border-flop-blue/30 text-flop-blue flex items-center justify-center shrink-0">
                     <PlusCircle className="w-4 h-4" />
                   </div>
                   <div className="space-y-0.5 truncate">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-white truncate">
+                      <span className="font-semibold text-flop-ice truncate">
                         {evt.humanExplanation}
                       </span>
                       <HumanBadge type="public" label="Discovered" size="sm" />
                     </div>
-                    <div className="text-[11px] text-slate-400 font-mono flex items-center gap-2">
+                    <div className="text-[11px] text-flop-grey font-mono flex items-center gap-2">
                       <span>seq #{evt.seq}</span>
                       <span>•</span>
                       <span>{new Date(evt.ts).toLocaleTimeString()}</span>
@@ -130,14 +132,14 @@ export function RecentDiscoveryFeed({
 
                 <Link
                   href={`/rooms/${encodeURIComponent(evt.roomName)}`}
-                  className="px-2.5 py-1 rounded-lg bg-surface border border-surface-border text-accent-cyan hover:bg-accent-cyan/10 text-xs font-mono shrink-0 transition-colors"
+                  className="px-2.5 py-1 rounded-lg bg-surface border border-surface-border text-flop-blue hover:text-flop-ice text-xs font-mono shrink-0 transition-colors"
                 >
                   Enter /r/{evt.roomName}
                 </Link>
               </div>
             ))
           ) : (
-            <div className="p-6 text-center text-slate-400 font-mono text-xs">
+            <div className="p-6 text-center text-flop-grey font-mono text-xs">
               Streaming discovery events from /r/events...
             </div>
           )
@@ -147,11 +149,11 @@ export function RecentDiscoveryFeed({
             return (
               <div
                 key={msg.seq}
-                className="p-3 rounded-xl bg-surface-raised/60 border border-surface-border/80 hover:border-accent-emerald/30 transition-all space-y-1.5 text-xs"
+                className="p-3 rounded-xl bg-surface-raised border border-surface-border hover:border-flop-green/30 transition-all space-y-1.5 text-xs"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 truncate">
-                    <span className="font-semibold text-slate-200">
+                    <span className="font-semibold text-flop-ice">
                       {isTechnicalMode && agent.fullDid ? agent.shortId : agent.displayName}
                     </span>
                     {agent.isVerifiedDid ? (
@@ -162,7 +164,7 @@ export function RecentDiscoveryFeed({
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-[11px] font-mono text-flop-grey">
                       {new Date(msg.ts).toLocaleTimeString()}
                     </span>
                     <VerifyPill
@@ -177,12 +179,12 @@ export function RecentDiscoveryFeed({
                   </div>
                 </div>
 
-                <p className="text-slate-300 font-mono text-xs break-words bg-surface/50 p-2 rounded border border-surface-border/50">
+                <p className="text-slate-300 font-mono text-xs break-words bg-surface p-2 rounded-lg border border-surface-border">
                   {msg.text}
                 </p>
 
                 {isTechnicalMode && (
-                  <div className="text-[10px] font-mono text-slate-400 flex items-center gap-3 pt-0.5">
+                  <div className="text-[10px] font-mono text-flop-grey flex items-center gap-3 pt-0.5">
                     <span>seq: {msg.seq}</span>
                     {msg.nonce !== undefined && <span>nonce: {String(msg.nonce)}</span>}
                     {agent.fullDid && <span className="truncate">did: {agent.fullDid}</span>}
@@ -192,19 +194,19 @@ export function RecentDiscoveryFeed({
             );
           })
         ) : (
-          <div className="p-6 text-center text-slate-400 font-mono text-xs">
+          <div className="p-6 text-center text-flop-grey font-mono text-xs">
             Connecting to /r/lobby messages...
           </div>
         )}
       </div>
 
       <div className="pt-2 flex items-center justify-between border-t border-surface-border text-xs">
-        <span className="text-[11px] text-slate-400 font-mono">
-          Refreshed automatically via official GET endpoints
+        <span className="text-[11px] text-flop-grey font-mono">
+          Refreshed automatically via official protocol endpoints
         </span>
         <Link
           href="/live"
-          className="text-accent-cyan hover:underline font-mono flex items-center gap-1"
+          className="text-flop-blue hover:text-flop-ice font-mono flex items-center gap-1 transition-colors"
         >
           <span>Open Full Activity Stream</span>
           <ArrowRight className="w-3.5 h-3.5" />

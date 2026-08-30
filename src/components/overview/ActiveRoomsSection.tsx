@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ParsedRoomSummary } from "@/lib/protocol/types";
 import { HumanBadge } from "../common/HumanBadge";
-import { Compass, Search, ArrowUpRight, Lock, Mail, Clock, Shield } from "lucide-react";
+import { Compass, Search, ArrowUpRight, Lock, Mail, Clock } from "lucide-react";
 import { useTechnicalMode } from "@/lib/store/technical-mode";
 
 interface ActiveRoomsSectionProps {
@@ -33,11 +33,11 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-border pb-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Compass className="w-5 h-5 text-accent-cyan" />
+          <h2 className="text-lg font-bold text-flop-ice flex items-center gap-2">
+            <Compass className="w-5 h-5 text-flop-blue" />
             <span>Observed Active Public Rooms</span>
           </h2>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-flop-grey">
             Sorted by most recent server activity. All names and topics are untrusted caller inputs.
           </p>
         </div>
@@ -45,34 +45,34 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
         <div className="flex flex-wrap items-center gap-2">
           {/* Search bar */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="w-3.5 h-3.5 text-flop-grey absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Filter rooms or topics..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs text-slate-200 placeholder:text-slate-400 focus:outline-none focus:border-accent-cyan/50 font-mono w-48 sm:w-60"
+              className="pl-8 pr-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs text-flop-ice placeholder:text-flop-grey focus:outline-none focus:border-flop-blue font-mono w-48 sm:w-60"
             />
           </div>
 
           {/* Filter Pills */}
-          <div className="flex items-center gap-1 bg-surface p-1 rounded-lg border border-surface-border text-xs">
+          <div className="flex items-center gap-1 bg-surface-raised p-1 rounded-lg border border-surface-border text-xs font-mono">
             <button
               onClick={() => setFilter("all")}
               className={`px-2.5 py-1 rounded font-medium transition-all ${
                 filter === "all"
-                  ? "bg-accent-cyan/15 text-accent-cyan"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-flop-blue text-flop-ice font-bold"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               All ({rooms.length})
             </button>
             <button
               onClick={() => setFilter("owned")}
-              className={`px-2 py-1 rounded font-medium transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded font-medium transition-all flex items-center gap-1 ${
                 filter === "owned"
-                  ? "bg-accent-amber/15 text-accent-amber"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-flop-blue/20 text-flop-ice border border-flop-blue/40"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               <Lock className="w-3 h-3" />
@@ -80,10 +80,10 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
             </button>
             <button
               onClick={() => setFilter("mailbox")}
-              className={`px-2 py-1 rounded font-medium transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded font-medium transition-all flex items-center gap-1 ${
                 filter === "mailbox"
-                  ? "bg-accent-purple/15 text-accent-purple"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-flop-blue/20 text-flop-ice border border-flop-blue/40"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               <Mail className="w-3 h-3" />
@@ -91,10 +91,10 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
             </button>
             <button
               onClick={() => setFilter("ephemeral")}
-              className={`px-2 py-1 rounded font-medium transition-all flex items-center gap-1 ${
+              className={`px-2.5 py-1 rounded font-medium transition-all flex items-center gap-1 ${
                 filter === "ephemeral"
-                  ? "bg-accent-rose/15 text-accent-rose"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-surface text-flop-ice border border-surface-border"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               <Clock className="w-3 h-3" />
@@ -110,14 +110,14 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
           <Link
             key={room.name}
             href={`/rooms/${encodeURIComponent(room.name)}`}
-            className="p-4 rounded-xl bg-surface border border-surface-border hover:border-accent-cyan/40 transition-all group flex flex-col justify-between space-y-3 relative overflow-hidden"
+            className="p-4 rounded-xl bg-surface border border-surface-border hover:border-flop-blue/40 transition-all group flex flex-col justify-between space-y-3 relative overflow-hidden"
           >
             <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-1.5 font-mono text-sm font-semibold text-white group-hover:text-accent-cyan transition-colors">
+                <div className="flex items-center gap-1.5 font-mono text-sm font-semibold text-flop-ice group-hover:text-flop-blue transition-colors">
                   <span>/r/{room.name}</span>
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-slate-400 group-hover:text-accent-cyan group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
+                <ArrowUpRight className="w-4 h-4 text-flop-grey group-hover:text-flop-blue group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" />
               </div>
 
               {/* Badges */}
@@ -133,25 +133,25 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
               {/* Topic Preview */}
               <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
                 {room.topic || (
-                  <span className="text-slate-400 italic">No topic note set for this room</span>
+                  <span className="text-flop-grey italic">No topic note set for this room</span>
                 )}
               </p>
             </div>
 
             {/* Footer Stats */}
-            <div className="pt-2 border-t border-surface-border/50 flex items-center justify-between text-[11px] font-mono text-slate-400">
-              <span className="text-accent-cyan">
+            <div className="pt-2 border-t border-surface-border/50 flex items-center justify-between text-[11px] font-mono text-flop-grey">
+              <span className="text-flop-ice font-semibold">
                 {isTechnicalMode ? `seq: ${room.seq}` : `${room.seq.toLocaleString()} msgs`}
               </span>
               <span>{room.sizeFormatted}</span>
-              <span className="text-slate-400">{room.relativeTime}</span>
+              <span className="text-flop-grey">{room.relativeTime}</span>
             </div>
           </Link>
         ))}
       </div>
 
       {filteredRooms.length === 0 && (
-        <div className="p-8 text-center rounded-xl bg-surface border border-surface-border text-slate-400 text-xs font-mono">
+        <div className="p-8 text-center rounded-xl bg-surface border border-surface-border text-flop-grey text-xs font-mono">
           No rooms matching &quot;{search}&quot; found in currently observed feed.
         </div>
       )}
@@ -159,7 +159,7 @@ export function ActiveRoomsSection({ rooms }: ActiveRoomsSectionProps) {
       <div className="pt-2 text-center">
         <Link
           href="/rooms"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-accent-cyan hover:underline font-mono"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-flop-blue hover:text-flop-ice hover:underline font-mono transition-colors"
         >
           <span>View All Discovered Public Rooms ({rooms.length}) →</span>
         </Link>

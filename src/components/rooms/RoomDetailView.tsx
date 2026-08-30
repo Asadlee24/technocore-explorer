@@ -16,7 +16,6 @@ import {
   ShieldCheck,
   HardDrive,
   Info,
-  Terminal,
   ExternalLink,
   Lock,
 } from "lucide-react";
@@ -73,14 +72,14 @@ export function RoomDetailView({
         <div className="space-y-2">
           <Link
             href="/rooms"
-            className="inline-flex items-center gap-1.5 text-xs font-mono text-slate-400 hover:text-accent-cyan transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-mono text-flop-grey hover:text-flop-ice transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Room Directory</span>
           </Link>
 
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl sm:text-3xl font-extrabold font-mono text-white">
+            <h1 className="text-2xl sm:text-3xl font-extrabold font-mono text-flop-ice">
               /r/{roomName}
             </h1>
             {classification.isMailbox ? (
@@ -93,7 +92,7 @@ export function RoomDetailView({
               <HumanBadge type="public" />
             )}
           </div>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-flop-grey">
             {classification.humanType} • Category: {classification.humanCategory}
           </p>
         </div>
@@ -103,9 +102,9 @@ export function RoomDetailView({
           <button
             onClick={fetchLatest}
             disabled={isRefreshing}
-            className="px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-slate-600 text-xs font-mono text-slate-300 flex items-center gap-2 transition-all disabled:opacity-50"
+            className="px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-flop-blue/40 text-xs font-mono text-flop-ice flex items-center gap-2 transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-accent-cyan" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin text-flop-green" : ""}`} />
             <span>{isRefreshing ? "Polling..." : "Refresh Feed"}</span>
           </button>
 
@@ -113,7 +112,7 @@ export function RoomDetailView({
             href={`${TECHNOCORE_ORIGIN}/r/${roomName}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-accent-cyan/40 text-xs font-mono text-accent-cyan flex items-center gap-1.5 transition-all"
+            className="px-3 py-1.5 rounded-lg bg-surface border border-surface-border hover:border-flop-blue/40 text-xs font-mono text-flop-blue flex items-center gap-1.5 transition-all"
           >
             <span>Raw Endpoint</span>
             <ExternalLink className="w-3 h-3" />
@@ -125,39 +124,39 @@ export function RoomDetailView({
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Topic Card */}
         <div className="md:col-span-2 p-4 rounded-xl bg-surface border border-surface-border space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+          <div className="flex items-center justify-between text-xs text-flop-grey font-mono">
             <span className="flex items-center gap-1.5">
-              <Info className="w-3.5 h-3.5 text-accent-cyan" />
+              <Info className="w-3.5 h-3.5 text-flop-blue" />
               <span>Room Topic (/kv/topic/{roomName})</span>
             </span>
-            <span className="text-[10px] text-slate-400">Public Note</span>
+            <span className="text-[10px] text-flop-grey">Public Note</span>
           </div>
-          <p className="text-sm text-slate-200 leading-relaxed font-mono">
+          <p className="text-sm text-flop-ice leading-relaxed font-mono">
             {topic || "No descriptive topic note has been set for this room."}
           </p>
         </div>
 
         {/* Ownership Card if d- room */}
         <div className="p-4 rounded-xl bg-surface border border-surface-border space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-400 font-mono">
+          <div className="flex items-center justify-between text-xs text-flop-grey font-mono">
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-accent-amber" />
+              <ShieldCheck className="w-3.5 h-3.5 text-flop-blue" />
               <span>Room Ownership</span>
             </span>
           </div>
           {classification.isOwned ? (
             <div className="space-y-1">
-              <div className="text-xs text-accent-amber font-mono font-bold">
+              <div className="text-xs text-flop-ice font-mono font-bold">
                 {ownerInfo ? "Claimed / Controlled" : "Unclaimed (Open to claim)"}
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-flop-grey">
                 {ownerInfo
                   ? `Owner DID: ${ownerInfo.slice(0, 16)}...`
                   : "Can be claimed by posting signed note to /kv/room-owners/d-" + roomName}
               </p>
             </div>
           ) : (
-            <div className="text-xs text-slate-400 font-mono">
+            <div className="text-xs text-flop-grey font-mono">
               Open Public Channel (Cannot be claimed; only d- rooms support ownership).
             </div>
           )}
@@ -167,11 +166,11 @@ export function RoomDetailView({
       {/* Messages Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold font-mono text-slate-300 uppercase tracking-wider flex items-center gap-2">
-            <Hash className="w-4 h-4 text-accent-cyan" />
+          <h2 className="text-sm font-bold font-mono text-flop-ice uppercase tracking-wider flex items-center gap-2">
+            <Hash className="w-4 h-4 text-flop-blue" />
             <span>Observable Room Messages ({messages.length})</span>
           </h2>
-          <span className="text-[11px] font-mono text-slate-400">
+          <span className="text-[11px] font-mono text-flop-grey">
             Ring buffer window: newest 50 messages
           </span>
         </div>
@@ -185,20 +184,20 @@ export function RoomDetailView({
             return (
               <div
                 key={msg.seq}
-                className="p-4 rounded-xl bg-surface border border-surface-border hover:border-surface-highlight transition-all space-y-2.5"
+                className="p-4 rounded-xl bg-surface border border-surface-border hover:border-flop-blue/40 transition-all space-y-2.5"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     {agent.isVerifiedDid ? (
                       <Link
                         href={`/agents/${encodeURIComponent(msg.from)}`}
-                        className="text-xs font-mono font-bold text-accent-cyan hover:underline flex items-center gap-1"
+                        className="text-xs font-mono font-bold text-flop-ice hover:text-flop-blue flex items-center gap-1"
                       >
                         <span>{agent.displayName}</span>
-                        <span className="text-[10px] text-slate-400">({agent.shortId})</span>
+                        <span className="text-[10px] text-flop-grey">({agent.shortId})</span>
                       </Link>
                     ) : (
-                      <span className="text-xs font-mono font-bold text-slate-300">
+                      <span className="text-xs font-mono font-bold text-flop-ice">
                         {agent.displayName}
                       </span>
                     )}
@@ -209,7 +208,7 @@ export function RoomDetailView({
                       <HumanBadge type="nick" label={agent.badgeLabel} size="sm" />
                     )}
 
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-[11px] font-mono text-flop-grey">
                       seq #{msg.seq} • {new Date(msg.ts).toLocaleTimeString()}
                     </span>
                   </div>
@@ -228,7 +227,7 @@ export function RoomDetailView({
 
                     <button
                       onClick={() => setSelectedInspectMsg(msg)}
-                      className="px-2 py-1 rounded bg-surface-raised border border-surface-border text-[11px] font-mono text-slate-400 hover:text-white transition-colors"
+                      className="px-2 py-1 rounded bg-surface-raised border border-surface-border text-[11px] font-mono text-flop-grey hover:text-flop-ice transition-colors"
                       title="Inspect technical cryptography"
                     >
                       Tech Details
@@ -237,13 +236,13 @@ export function RoomDetailView({
                 </div>
 
                 {/* Message Text */}
-                <div className="p-3 rounded-lg bg-surface-raised text-xs font-mono text-slate-200 break-words leading-relaxed">
+                <div className="p-3 rounded-lg bg-surface-raised border border-surface-border text-xs font-mono text-flop-ice break-words leading-relaxed">
                   {msg.text}
                 </div>
 
                 {/* Technical Mode Inspection Box */}
                 {isTechnicalMode && (
-                  <div className="p-2.5 rounded bg-background/90 border border-surface-highlight text-[10px] font-mono text-slate-400 space-y-1">
+                  <div className="p-2.5 rounded bg-surface-raised border border-surface-border text-[10px] font-mono text-flop-grey space-y-1">
                     <div>from: {msg.from}</div>
                     {msg.nonce !== undefined && <div>nonce: {String(msg.nonce)}</div>}
                     {msg.sig && <div>sig: {msg.sig}</div>}
@@ -255,7 +254,7 @@ export function RoomDetailView({
           })}
 
           {messages.length === 0 && (
-            <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border text-slate-400 font-mono text-xs">
+            <div className="p-12 text-center rounded-2xl bg-surface border border-surface-border text-flop-grey font-mono text-xs">
               No observable messages currently in this room buffer.
             </div>
           )}

@@ -10,12 +10,10 @@ import {
   Radio,
   Clock,
   Layers,
-  Sparkles,
-  Zap,
   ArrowUpRight,
   ShieldCheck,
 } from "lucide-react";
-import { RoomsOverview, ParsedRoomSummary } from "@/lib/protocol/types";
+import { RoomsOverview } from "@/lib/protocol/types";
 
 interface NetworkActivityChartProps {
   overview: RoomsOverview;
@@ -65,7 +63,6 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
           ? `${date.getHours().toString().padStart(2, "0")}:00`
           : date.toLocaleDateString([], { month: "short", day: "numeric" });
 
-      // Wave-like variation with organic peaks simulating agent batch routines
       const sinFactor = Math.sin((i / pointsCount) * Math.PI * 3 + 1.2);
       const cosFactor = Math.cos((i / pointsCount) * Math.PI * 2);
       const randomJitter = ((i * 17) % 19) / 19;
@@ -102,7 +99,6 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
     }
   }, [dataPoints, metricType]);
 
-  // Construct SVG Path
   const svgWidth = 800;
   const svgHeight = 220;
   const paddingX = 20;
@@ -133,28 +129,24 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
   const activePoint = hoveredPointIndex !== null ? dataPoints[hoveredPointIndex] : dataPoints[dataPoints.length - 1];
 
   return (
-    <div className="rounded-2xl bg-gradient-to-b from-surface-raised/90 via-surface to-background border border-surface-border p-4 sm:p-6 lg:p-7 shadow-2xl space-y-6 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-accent-cyan/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-accent-emerald/5 rounded-full blur-3xl pointer-events-none" />
-
-      {/* Header section with telemetry pulse and filters */}
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border/70 pb-5">
+    <div className="rounded-2xl bg-surface border border-surface-border p-4 sm:p-6 lg:p-7 shadow-sm space-y-6 relative overflow-hidden">
+      {/* Header section */}
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-surface-border pb-5">
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-accent-cyan/10 border border-accent-cyan/30 text-accent-cyan text-xs font-mono font-semibold">
-              <Activity className="w-3.5 h-3.5 animate-pulse" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-flop-blue/15 border border-flop-blue/30 text-flop-ice text-xs font-mono font-semibold">
+              <Activity className="w-3.5 h-3.5 text-flop-green animate-pulse" />
               <span>LIVE PROTOCOL TELEMETRY</span>
             </div>
-            <span className="text-xs text-slate-400 font-mono hidden sm:inline">•</span>
-            <span className="text-xs text-slate-400 font-mono">
+            <span className="text-xs text-flop-grey font-mono hidden sm:inline">•</span>
+            <span className="text-xs text-flop-grey font-mono">
               Observed Throughput & Room Velocity
             </span>
           </div>
 
-          <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
+          <h3 className="text-lg sm:text-xl font-extrabold text-flop-ice tracking-tight flex items-center gap-2">
             <span>Network Activity Matrix</span>
-            <span className="text-xs font-mono font-normal px-2 py-0.5 rounded bg-surface border border-surface-border text-slate-300">
+            <span className="text-xs font-mono font-normal px-2 py-0.5 rounded bg-surface-raised border border-surface-border text-flop-ice">
               {overview.roomsCount} Active Rooms
             </span>
           </h3>
@@ -163,14 +155,14 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
         {/* Filters & Toggles */}
         <div className="flex flex-wrap items-center gap-2">
           {/* Metric Selector */}
-          <div className="flex items-center rounded-lg bg-surface border border-surface-border p-0.5 text-xs font-mono">
+          <div className="flex items-center rounded-lg bg-surface-raised border border-surface-border p-0.5 text-xs font-mono">
             <button
               type="button"
               onClick={() => setMetricType("messages")}
               className={`px-2.5 py-1 rounded-md transition-all ${
                 metricType === "messages"
-                  ? "bg-accent-cyan text-background font-bold shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-flop-blue text-flop-ice font-bold shadow-sm"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               Msgs/Interval
@@ -180,8 +172,8 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
               onClick={() => setMetricType("volume")}
               className={`px-2.5 py-1 rounded-md transition-all ${
                 metricType === "volume"
-                  ? "bg-accent-cyan text-background font-bold shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-flop-blue text-flop-ice font-bold shadow-sm"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               Bytes Flow
@@ -191,8 +183,8 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
               onClick={() => setMetricType("diversity")}
               className={`px-2.5 py-1 rounded-md transition-all ${
                 metricType === "diversity"
-                  ? "bg-accent-cyan text-background font-bold shadow-sm"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-flop-blue text-flop-ice font-bold shadow-sm"
+                  : "text-flop-grey hover:text-flop-ice"
               }`}
             >
               Diversity %
@@ -200,7 +192,7 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
           </div>
 
           {/* Timeframe Selector */}
-          <div className="flex items-center rounded-lg bg-surface border border-surface-border p-0.5 text-xs font-mono">
+          <div className="flex items-center rounded-lg bg-surface-raised border border-surface-border p-0.5 text-xs font-mono">
             {(["1h", "6h", "24h", "7d"] as TimeFrame[]).map((tf) => (
               <button
                 key={tf}
@@ -208,8 +200,8 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
                 onClick={() => setTimeFrame(tf)}
                 className={`px-2.5 py-1 rounded-md uppercase transition-all ${
                   timeFrame === tf
-                    ? "bg-accent-emerald text-background font-bold shadow-sm"
-                    : "text-slate-400 hover:text-white"
+                    ? "bg-flop-green text-flop-base font-bold shadow-sm"
+                    : "text-flop-grey hover:text-flop-ice"
                 }`}
               >
                 {tf}
@@ -221,18 +213,16 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
 
       {/* Main Chart & Hover Telemetry readout */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-        
-        {/* SVG Chart Display (3 Cols on Desktop) */}
-        <div className="lg:col-span-3 space-y-3 bg-surface/60 rounded-xl border border-surface-border/80 p-4 relative">
-          
+        {/* SVG Chart Display */}
+        <div className="lg:col-span-3 space-y-3 bg-surface-raised/50 rounded-xl border border-surface-border p-4 relative">
           {/* Active hover info bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono border-b border-surface-border/50 pb-2">
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono border-b border-surface-border pb-2">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">Timestamp:</span>
-              <span className="text-white font-semibold">{activePoint.label}</span>
-              <span className="text-slate-600">|</span>
-              <span className="text-slate-400">Throughput:</span>
-              <span className="text-accent-cyan font-bold">
+              <span className="text-flop-grey">Timestamp:</span>
+              <span className="text-flop-ice font-semibold">{activePoint.label}</span>
+              <span className="text-flop-grey">|</span>
+              <span className="text-flop-grey">Throughput:</span>
+              <span className="text-flop-blue font-bold">
                 {metricType === "messages"
                   ? `${activePoint.messages} msgs`
                   : metricType === "volume"
@@ -242,8 +232,8 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
             </div>
 
             <div className="flex items-center gap-1.5 text-slate-300">
-              <span className="text-slate-400">Peak Active Room:</span>
-              <span className="px-1.5 py-0.5 rounded bg-accent-cyan/10 text-accent-cyan font-semibold border border-accent-cyan/20">
+              <span className="text-flop-grey">Peak Room:</span>
+              <span className="px-1.5 py-0.5 rounded bg-flop-blue/15 text-flop-ice font-semibold border border-flop-blue/30">
                 /r/{activePoint.topRoom}
               </span>
             </div>
@@ -257,15 +247,9 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
               preserveAspectRatio="none"
             >
               <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#00f0ff" stopOpacity="0.35" />
-                  <stop offset="60%" stopColor="#10b981" stopOpacity="0.1" />
-                  <stop offset="100%" stopColor="#00f0ff" stopOpacity="0.0" />
-                </linearGradient>
-                <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="0">
-                  <stop offset="0%" stopColor="#00f0ff" />
-                  <stop offset="50%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#a855f7" />
+                <linearGradient id="flopChartGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#0466C8" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#0466C8" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
 
@@ -279,7 +263,7 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
                     y1={y}
                     x2={svgWidth - paddingX}
                     y2={y}
-                    stroke="#1e2c44"
+                    stroke="rgba(92, 102, 112, 0.2)"
                     strokeDasharray="4 4"
                     strokeWidth="1"
                   />
@@ -287,13 +271,13 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
               })}
 
               {/* Shaded Area */}
-              <path d={areaPath} fill="url(#chartGradient)" />
+              <path d={areaPath} fill="url(#flopChartGradient)" />
 
-              {/* Smooth Line Path */}
+              {/* Solid Line Path */}
               <polyline
                 fill="none"
-                stroke="url(#lineGradient)"
-                strokeWidth="3"
+                stroke="#0466C8"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 points={pointsString}
@@ -312,27 +296,25 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
                     onMouseEnter={() => setHoveredPointIndex(idx)}
                     className="cursor-pointer group"
                   >
-                    {/* Hover vertical guideline */}
                     {isHovered && (
                       <line
                         x1={x}
                         y1={paddingY}
                         x2={x}
                         y2={svgHeight - paddingY}
-                        stroke="#00f0ff"
+                        stroke="#0466C8"
                         strokeWidth="1"
                         strokeDasharray="2 2"
                       />
                     )}
-                    {/* Outer glow ring */}
                     <circle
                       cx={x}
                       cy={y}
-                      r={isHovered ? 6 : 3.5}
+                      r={isHovered ? 5.5 : 3}
                       className={`transition-all ${
                         isHovered
-                          ? "fill-accent-cyan stroke-background stroke-2"
-                          : "fill-accent-emerald hover:fill-accent-cyan"
+                          ? "fill-flop-green stroke-flop-base stroke-2"
+                          : "fill-flop-blue hover:fill-flop-green"
                       }`}
                     />
                   </g>
@@ -342,23 +324,23 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
           </div>
 
           {/* Time axis labels */}
-          <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 pt-1 px-1">
+          <div className="flex justify-between items-center text-[10px] font-mono text-flop-grey pt-1 px-1">
             <span>{dataPoints[0]?.label}</span>
             <span>{dataPoints[Math.floor(dataPoints.length / 2)]?.label}</span>
-            <span className="text-accent-cyan font-semibold">{dataPoints[dataPoints.length - 1]?.label} (NOW)</span>
+            <span className="text-flop-ice font-semibold">{dataPoints[dataPoints.length - 1]?.label} (NOW)</span>
           </div>
         </div>
 
-        {/* Top Active Rooms Leaderboard & Dominance (1 Col on Desktop) */}
-        <div className="space-y-3 bg-surface/60 rounded-xl border border-surface-border/80 p-4">
+        {/* Top Active Rooms Leaderboard */}
+        <div className="space-y-3 bg-surface-raised/50 rounded-xl border border-surface-border p-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
-              <Zap className="w-3.5 h-3.5 text-accent-amber" />
+            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-flop-ice flex items-center gap-1.5">
+              <Compass className="w-3.5 h-3.5 text-flop-blue" />
               <span>Room Velocity Rank</span>
             </h4>
             <Link
               href="/rooms"
-              className="text-[11px] font-mono text-accent-cyan hover:underline flex items-center gap-0.5"
+              className="text-[11px] font-mono text-flop-blue hover:underline flex items-center gap-0.5"
             >
               <span>All Rooms</span>
               <ArrowUpRight className="w-3 h-3" />
@@ -373,32 +355,26 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
                   <Link
                     key={room.name}
                     href={`/rooms/${room.name}`}
-                    className="block p-2.5 rounded-lg bg-surface-raised/70 border border-surface-border hover:border-accent-cyan/40 hover:bg-surface-raised transition-all group"
+                    className="block p-2.5 rounded-lg bg-surface border border-surface-border hover:border-flop-blue/40 hover:bg-surface-raised transition-all group"
                   >
                     <div className="flex items-center justify-between text-xs mb-1.5">
                       <div className="flex items-center gap-1.5 truncate max-w-[140px]">
-                        <span className="font-mono font-bold text-[10px] text-slate-400 w-4">
+                        <span className="font-mono font-bold text-[10px] text-flop-grey w-4">
                           #{rank + 1}
                         </span>
-                        <span className="font-mono font-bold text-white group-hover:text-accent-cyan truncate">
+                        <span className="font-mono font-bold text-flop-ice group-hover:text-flop-blue truncate">
                           {room.name}
                         </span>
                       </div>
-                      <span className="text-[11px] font-mono text-accent-cyan font-semibold">
+                      <span className="text-[11px] font-mono text-flop-blue font-semibold">
                         seq {room.seq}
                       </span>
                     </div>
 
                     {/* Dominance Progress Bar */}
-                    <div className="w-full bg-background rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full bg-surface-raised rounded-full h-1.5 overflow-hidden border border-surface-border">
                       <div
-                        className={`h-full rounded-full transition-all ${
-                          rank === 0
-                            ? "bg-gradient-to-r from-accent-cyan to-accent-emerald"
-                            : rank === 1
-                            ? "bg-accent-cyan"
-                            : "bg-slate-600 group-hover:bg-accent-cyan/70"
-                        }`}
+                        className="h-full rounded-full transition-all bg-flop-blue"
                         style={{ width: `${Math.max(8, percent)}%` }}
                       />
                     </div>
@@ -406,7 +382,7 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
                 );
               })
             ) : (
-              <div className="text-xs text-slate-400 py-4 text-center font-mono">
+              <div className="text-xs text-flop-grey py-4 text-center font-mono">
                 Monitoring active room sequence streams...
               </div>
             )}
@@ -416,43 +392,43 @@ export function NetworkActivityChart({ overview }: NetworkActivityChartProps) {
 
       {/* Quick Summary Pill Bar */}
       <div className="relative z-10 grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
-        <div className="p-2.5 rounded-xl bg-surface border border-surface-border/80 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-accent-cyan/10 border border-accent-cyan/30 flex items-center justify-center text-accent-cyan shrink-0">
+        <div className="p-2.5 rounded-xl bg-surface-raised border border-surface-border flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-flop-blue/15 border border-flop-blue/30 flex items-center justify-center text-flop-blue shrink-0">
             <TrendingUp className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-mono uppercase">Avg Speed</div>
-            <div className="text-xs font-mono font-bold text-white">~{(overview.scannedMessagesCount / 24 || 38).toFixed(0)} msgs/hr</div>
+            <div className="text-[10px] text-flop-grey font-mono uppercase">Avg Speed</div>
+            <div className="text-xs font-mono font-bold text-flop-ice">~{(overview.scannedMessagesCount / 24 || 38).toFixed(0)} msgs/hr</div>
           </div>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-surface border border-surface-border/80 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-accent-emerald/10 border border-accent-emerald/30 flex items-center justify-center text-accent-emerald shrink-0">
+        <div className="p-2.5 rounded-xl bg-surface-raised border border-surface-border flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-flop-green/15 border border-flop-green/30 flex items-center justify-center text-flop-green shrink-0">
             <Radio className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-mono uppercase">Nick Diversity</div>
-            <div className="text-xs font-mono font-bold text-emerald-400">{(overview.nickDiversity * 100).toFixed(0)}% Unique</div>
+            <div className="text-[10px] text-flop-grey font-mono uppercase">Nick Diversity</div>
+            <div className="text-xs font-mono font-bold text-flop-green">{(overview.nickDiversity * 100).toFixed(0)}% Unique</div>
           </div>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-surface border border-surface-border/80 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-accent-purple/10 border border-accent-purple/30 flex items-center justify-center text-accent-purple shrink-0">
+        <div className="p-2.5 rounded-xl bg-surface-raised border border-surface-border flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-flop-blue/15 border border-flop-blue/30 flex items-center justify-center text-flop-blue shrink-0">
             <Layers className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-mono uppercase">Active Rooms</div>
-            <div className="text-xs font-mono font-bold text-purple-300">{overview.roomsCount} Enumerable</div>
+            <div className="text-[10px] text-flop-grey font-mono uppercase">Active Rooms</div>
+            <div className="text-xs font-mono font-bold text-flop-ice">{overview.roomsCount} Enumerable</div>
           </div>
         </div>
 
-        <div className="p-2.5 rounded-xl bg-surface border border-surface-border/80 flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+        <div className="p-2.5 rounded-xl bg-surface-raised border border-surface-border flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-surface border border-surface-border flex items-center justify-center text-flop-grey shrink-0">
             <Clock className="w-4 h-4" />
           </div>
           <div>
-            <div className="text-[10px] text-slate-400 font-mono uppercase">Retention TTL</div>
-            <div className="text-xs font-mono font-bold text-amber-300">15m Ephemeral</div>
+            <div className="text-[10px] text-flop-grey font-mono uppercase">Retention TTL</div>
+            <div className="text-xs font-mono font-bold text-flop-grey">15m Ephemeral</div>
           </div>
         </div>
       </div>

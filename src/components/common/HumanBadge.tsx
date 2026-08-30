@@ -14,52 +14,52 @@ export function HumanBadge({ type, label, size = "sm" }: HumanBadgeProps) {
     case "owned":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-amber/10 text-accent-amber border border-accent-amber/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-flop-blue/15 text-flop-ice border border-flop-blue/30 ${sizeClasses}`}
         >
-          <Lock className="w-3 h-3" />
+          <Lock className="w-3 h-3 text-flop-blue" />
           <span>{label || "Owned / Controlled"}</span>
         </span>
       );
     case "mailbox":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-purple/10 text-accent-purple border border-accent-purple/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-flop-blue/15 text-flop-ice border border-flop-blue/40 ${sizeClasses}`}
         >
-          <Mail className="w-3 h-3" />
+          <Mail className="w-3 h-3 text-flop-blue" />
           <span>{label || "Signed Mailbox"}</span>
         </span>
       );
     case "ephemeral":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-rose/10 text-accent-rose border border-accent-rose/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-surface-raised text-flop-grey border border-surface-border ${sizeClasses}`}
         >
-          <Clock className="w-3 h-3" />
+          <Clock className="w-3 h-3 text-flop-grey" />
           <span>{label || "Ephemeral (15m TTL)"}</span>
         </span>
       );
     case "private":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-slate-800 text-slate-400 border border-slate-700 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-surface text-flop-grey border border-surface-border ${sizeClasses}`}
         >
           <Lock className="w-3 h-3" />
-          <span>{label || "Unlisted / Capability"}</span>
+          <span>{label || "Unlisted Channel"}</span>
         </span>
       );
     case "verified-did":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-emerald/10 text-accent-emerald border border-accent-emerald/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-flop-green/15 text-flop-green border border-flop-green/30 ${sizeClasses}`}
         >
-          <ShieldCheck className="w-3 h-3" />
+          <ShieldCheck className="w-3 h-3 text-flop-green" />
           <span>{label || "Verified Ed25519"}</span>
         </span>
       );
     case "unverified":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-rose/10 text-accent-rose border border-accent-rose/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-surface-raised text-flop-grey border border-surface-border ${sizeClasses}`}
         >
           <ShieldAlert className="w-3 h-3" />
           <span>{label || "Unverified Key"}</span>
@@ -68,16 +68,16 @@ export function HumanBadge({ type, label, size = "sm" }: HumanBadgeProps) {
     case "server":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-flop-blue/15 text-flop-ice border border-flop-blue/30 ${sizeClasses}`}
         >
-          <Server className="w-3 h-3" />
+          <Server className="w-3 h-3 text-flop-blue" />
           <span>{label || "Technocore Protocol"}</span>
         </span>
       );
     case "nick":
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-slate-800 text-slate-400 border border-surface-border ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-surface-raised text-flop-grey border border-surface-border ${sizeClasses}`}
         >
           <User className="w-3 h-3" />
           <span>{label || "Self-Asserted Nick"}</span>
@@ -87,9 +87,9 @@ export function HumanBadge({ type, label, size = "sm" }: HumanBadgeProps) {
     default:
       return (
         <span
-          className={`inline-flex items-center gap-1 rounded-full font-mono bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/30 ${sizeClasses}`}
+          className={`inline-flex items-center gap-1 rounded-full font-mono bg-flop-blue/15 text-flop-ice border border-flop-blue/30 ${sizeClasses}`}
         >
-          <Globe className="w-3 h-3" />
+          <Globe className="w-3 h-3 text-flop-blue" />
           <span>{label || "Public Channel"}</span>
         </span>
       );
