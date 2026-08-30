@@ -87,3 +87,35 @@ CREATE TABLE IF NOT EXISTS continuum_collector_telemetry (
     active_rooms_count INTEGER NOT NULL,
     recorded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
+
+-- ==============================================================================
+-- 7. Row Level Security & Public Read Access (Supabase / Anon Client Support)
+-- ==============================================================================
+ALTER TABLE continuum_rooms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE continuum_messages ENABLE ROW LEVEL SECURITY;
+ALTER TABLE continuum_merkle_blocks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE continuum_collection_gaps ENABLE ROW LEVEL SECURITY;
+ALTER TABLE continuum_collector_telemetry ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow public read on continuum_rooms" ON continuum_rooms FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow public read on continuum_messages" ON continuum_messages FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow public read on continuum_merkle_blocks" ON continuum_merkle_blocks FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow public read on continuum_collection_gaps" ON continuum_collection_gaps FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Allow public read on continuum_collector_telemetry" ON continuum_collector_telemetry FOR SELECT USING (true);
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+
