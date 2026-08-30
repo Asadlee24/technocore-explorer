@@ -46,11 +46,35 @@ export function RoomDetailView({
   const fetchLatest = async () => {
     setIsRefreshing(true);
     try {
-      const res = await fetch(`/api/proxy?path=/r/${encodeURIComponent(roomName)}?format=json`);
+      const res = await fetch(`/api/proxy?path=/r/${encodeURIComponent(roomName)}`);
       if (res.ok) {
-        const data = await res.json();
-        if (data.messages) {
-          setMessages(data.messages);
+        const rawText = await res.text();
+        let msgs: ProtocolMessage[] = [];
+
+        try {
+          const json = JSON.parse(rawText);
+          if (json && Array.isArray(json.messages)) {
+            msgs = json.messages;
+          }
+        } catch {
+          // Parse plain text protocol format: [seq] ts <from> text
+          const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+          for (const line of lines) {
+            if (line.startsWith("#") || line.startsWith("!!")) continue;
+            const match = line.match(/^\[(\d+)\]\s+(\S+)\s+<([^>]+)>\s*(.*)$/);
+            if (match) {
+              msgs.push({
+                seq: parseInt(match[1], 10),
+                ts: match[2],
+                from: match[3],
+                text: match[4] || "",
+              });
+            }
+          }
+        }
+
+        if (msgs.length > 0) {
+          setMessages(msgs);
         }
       }
     } catch (err) {

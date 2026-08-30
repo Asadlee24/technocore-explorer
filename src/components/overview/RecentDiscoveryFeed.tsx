@@ -23,36 +23,56 @@ export function RecentDiscoveryFeed({
   const [activeTab, setActiveTab] = useState<"discovery" | "lobby">("discovery");
   const { isTechnicalMode } = useTechnicalMode();
 
-  // Auto-refresh feed every 8 seconds via safe API proxy
+  // Auto-refresh feed every 6 seconds via safe API proxy
   useEffect(() => {
+    let isMounted = true;
     const fetchFeed = async () => {
       try {
-        if (activeTab === "discovery") {
-          const res = await fetch("/api/proxy?path=/r/events?format=json");
-          if (res.ok) {
-            const data = await res.json();
-            if (data.messages) {
-              const formatted: DiscoveryEvent[] = data.messages.map((m: ProtocolMessage) => ({
-                seq: m.seq,
-                ts: m.ts,
-                from: m.from,
-                text: m.text,
-                roomName: m.text.startsWith("created ") ? m.text.replace("created ", "") : "room",
-                eventType: m.text.startsWith("created ") ? "room_created" : "system_notice",
-                humanExplanation: m.text.startsWith("created ")
-                  ? `New public room "${m.text.replace("created ", "")}" created`
-                  : m.text,
-              }));
-              setEvents(formatted.reverse().slice(0, 15));
+        const targetPath = activeTab === "discovery" ? "/r/events" : "/r/lobby";
+        const res = await fetch(`/api/proxy?path=${encodeURIComponent(targetPath)}`);
+        if (!res.ok) return;
+
+        const rawText = await res.text();
+        let msgs: ProtocolMessage[] = [];
+
+        try {
+          const json = JSON.parse(rawText);
+          if (json && Array.isArray(json.messages)) {
+            msgs = json.messages;
+          }
+        } catch {
+          // Parse plain text protocol format: [seq] ts <from> text
+          const lines = rawText.split("\n").map((l) => l.trim()).filter(Boolean);
+          for (const line of lines) {
+            if (line.startsWith("#") || line.startsWith("!!")) continue;
+            const match = line.match(/^\[(\d+)\]\s+(\S+)\s+<([^>]+)>\s*(.*)$/);
+            if (match) {
+              msgs.push({
+                seq: parseInt(match[1], 10),
+                ts: match[2],
+                from: match[3],
+                text: match[4] || "",
+              });
             }
           }
-        } else {
-          const res = await fetch("/api/proxy?path=/r/lobby?format=json");
-          if (res.ok) {
-            const data = await res.json();
-            if (data.messages) {
-              setLobbyMessages(data.messages.reverse().slice(0, 15));
-            }
+        }
+
+        if (msgs.length > 0 && isMounted) {
+          if (activeTab === "discovery") {
+            const formatted: DiscoveryEvent[] = msgs.map((m: ProtocolMessage) => ({
+              seq: m.seq,
+              ts: m.ts,
+              from: m.from,
+              text: m.text,
+              roomName: m.text.startsWith("created ") ? m.text.replace("created ", "").trim() : "room",
+              eventType: m.text.startsWith("created ") ? "room_created" : "system_notice",
+              humanExplanation: m.text.startsWith("created ")
+                ? `New public room "${m.text.replace("created ", "").trim()}" created`
+                : m.text,
+            }));
+            setEvents(formatted.reverse().slice(0, 15));
+          } else {
+            setLobbyMessages(msgs.reverse().slice(0, 15));
           }
         }
       } catch (err) {
@@ -60,8 +80,11 @@ export function RecentDiscoveryFeed({
       }
     };
 
-    const interval = setInterval(fetchFeed, 8000);
-    return () => clearInterval(interval);
+    const interval = setInterval(fetchFeed, 6000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [activeTab]);
 
   return (

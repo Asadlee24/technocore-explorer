@@ -3,6 +3,7 @@ import {
   RoomMessagesResponse,
   DiscoveryEvent,
   AgentProfile,
+  ProtocolMessage,
 } from "./types";
 import { TECHNOCORE_ORIGIN } from "./constants";
 import { parseRoomsListing, formatDiscoveryEvent } from "./parser";
@@ -61,19 +62,67 @@ export class TechnocoreClient {
   }
 
   /**
-   * Fetch messages from a specific room (JSON format)
+   * Fetch messages from a specific room (supports both plain text protocol streams and JSON)
    */
   async getRoomMessages(
     roomName: string,
     options?: { since?: number; limit?: number }
   ): Promise<RoomMessagesResponse> {
     const cleanRoom = roomName.replace(/^\/r\//, "");
-    const params = new URLSearchParams();
-    params.set("format", "json");
-    if (options?.since !== undefined) params.set("since", String(options.since));
-    if (options?.limit !== undefined) params.set("limit", String(options.limit));
 
+    // 1. Try plain text fetch with curl User-Agent (fast and 100% reliable on Technocore)
     try {
+      const url = `${this.baseUrl}/r/${cleanRoom}`;
+      const res = await fetch(url, {
+        next: { revalidate: 3 },
+        headers: {
+          Accept: "text/plain, */*",
+          "User-Agent": "curl/8.4.0",
+        },
+      });
+
+      if (res.ok) {
+        const text = await res.text();
+        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        const messages: ProtocolMessage[] = [];
+
+        for (const line of lines) {
+          if (line.startsWith("#") || line.startsWith("!!")) continue;
+          const match = line.match(/^\[(\d+)\]\s+(\S+)\s+<([^>]+)>\s*(.*)$/);
+          if (match) {
+            const seq = parseInt(match[1], 10);
+            if (options?.since !== undefined && seq <= options.since) continue;
+            messages.push({
+              seq,
+              ts: match[2],
+              from: match[3],
+              text: match[4] || "",
+            });
+          }
+        }
+
+        if (messages.length > 0) {
+          const limited = options?.limit ? messages.slice(-options.limit) : messages;
+          return {
+            room: cleanRoom,
+            count: limited.length,
+            first_seq: limited[0]?.seq || 0,
+            last_seq: limited[limited.length - 1]?.seq || 0,
+            messages: limited,
+          };
+        }
+      }
+    } catch {
+      // fallback
+    }
+
+    // 2. Try JSON format as secondary
+    try {
+      const params = new URLSearchParams();
+      params.set("format", "json");
+      if (options?.since !== undefined) params.set("since", String(options.since));
+      if (options?.limit !== undefined) params.set("limit", String(options.limit));
+
       const url = `${this.baseUrl}/r/${cleanRoom}?${params.toString()}`;
       const res = await fetch(url, {
         next: { revalidate: 5 },
@@ -83,22 +132,23 @@ export class TechnocoreClient {
         },
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status} when fetching room ${cleanRoom}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.messages && Array.isArray(data.messages)) {
+          return data as RoomMessagesResponse;
+        }
       }
-
-      const data = await res.json();
-      return data as RoomMessagesResponse;
     } catch (err) {
       console.error(`Error fetching messages for room ${cleanRoom}:`, err);
-      return {
-        room: cleanRoom,
-        count: 0,
-        first_seq: 0,
-        last_seq: 0,
-        messages: [],
-      };
     }
+
+    return {
+      room: cleanRoom,
+      count: 0,
+      first_seq: 0,
+      last_seq: 0,
+      messages: [],
+    };
   }
 
   /**

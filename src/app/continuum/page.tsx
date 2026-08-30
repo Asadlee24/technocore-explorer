@@ -56,7 +56,7 @@ export default async function ContinuumPage() {
           </Link>
         </div>
 
-        <ArchiveExplorerView initialRecords={recentRecords} />
+        <ArchiveExplorerView initialRecords={recentRecords.length > 0 ? recentRecords : undefined} />
       </section>
     </div>
   );
