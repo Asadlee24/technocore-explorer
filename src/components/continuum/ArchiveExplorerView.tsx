@@ -4,6 +4,12 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { ArchiveRecord } from "@/lib/continuum/types";
 import {
+  generateKeypair,
+  restoreKeypairFromPrivateKey,
+  signMessage,
+  KeypairInfo,
+} from "@/lib/crypto/signer";
+import {
   Database,
   Search,
   ShieldCheck,
@@ -14,6 +20,12 @@ import {
   Loader2,
   RefreshCw,
   Filter,
+  Key,
+  Download,
+  Upload,
+  Eye,
+  EyeOff,
+  Sparkles,
 } from "lucide-react";
 
 interface ArchiveExplorerViewProps {
@@ -31,14 +43,76 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
   const [selectedRecord, setSelectedRecord] = useState<ArchiveRecord | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(initialTotalCount ?? initialRecords?.length ?? 0);
+  
+  // Broadcast & Key Management State
   const [showBroadcast, setShowBroadcast] = useState(false);
+  const [isSignedMode, setIsSignedMode] = useState(true);
+  const [keypair, setKeypair] = useState<KeypairInfo | null>(null);
+  const [showRestoreModal, setShowRestoreModal] = useState(false);
+  const [restoreInput, setRestoreInput] = useState("");
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [showPrivateKey, setShowPrivateKey] = useState(false);
+  
   const [broadcastNick, setBroadcastNick] = useState("asadlee");
   const [broadcastRoom, setBroadcastRoom] = useState("lobby");
   const [broadcastText, setBroadcastText] = useState("");
   const [broadcasting, setBroadcasting] = useState(false);
   const [broadcastSuccess, setBroadcastSuccess] = useState<string | null>(null);
+  
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMount = useRef(true);
+
+  // Initialize or load Agent DID Keypair from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("technocore_agent_keypair");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed.privateKeyHex && parsed.did) {
+          setKeypair(parsed);
+          return;
+        }
+      }
+      // Generate fresh keypair if none found
+      const fresh = generateKeypair();
+      setKeypair(fresh);
+      localStorage.setItem("technocore_agent_keypair", JSON.stringify(fresh));
+    } catch {
+      const fresh = generateKeypair();
+      setKeypair(fresh);
+    }
+  }, []);
+
+  const handleGenerateNewKey = () => {
+    if (confirm("Are you sure you want to generate a new DID? Make sure you have exported your current private key if you wish to keep it.")) {
+      const fresh = generateKeypair();
+      setKeypair(fresh);
+      try {
+        localStorage.setItem("technocore_agent_keypair", JSON.stringify(fresh));
+      } catch {}
+      setBroadcastSuccess("New Ed25519 DID Keypair generated successfully!");
+      setTimeout(() => setBroadcastSuccess(null), 3000);
+    }
+  };
+
+  const handleRestoreKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    setRestoreError(null);
+    try {
+      const restored = restoreKeypairFromPrivateKey(restoreInput);
+      setKeypair(restored);
+      try {
+        localStorage.setItem("technocore_agent_keypair", JSON.stringify(restored));
+      } catch {}
+      setShowRestoreModal(false);
+      setRestoreInput("");
+      setBroadcastSuccess(`Identity restored successfully: ${restored.did.slice(0, 16)}...`);
+      setTimeout(() => setBroadcastSuccess(null), 4000);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setRestoreError(msg);
+    }
+  };
 
   const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,13 +121,26 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
     setError(null);
     setBroadcastSuccess(null);
     try {
+      let fromIdentity = broadcastNick.trim() || "asadlee";
+      let nonce: number | undefined = undefined;
+      let sig: string | undefined = undefined;
+
+      if (isSignedMode && keypair) {
+        fromIdentity = keypair.did;
+        nonce = Date.now();
+        const signed = signMessage(keypair.privateKeyHex, broadcastRoom, nonce, broadcastText.trim());
+        sig = signed.sig;
+      }
+
       const res = await fetch("/api/continuum/message", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: broadcastNick.trim() || "asadlee",
+          from: fromIdentity,
           room: broadcastRoom,
           text: broadcastText.trim(),
+          nonce,
+          sig,
         }),
       });
       const json = await res.json();
@@ -63,7 +150,7 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
         setRecords((prev) => [json.record, ...prev]);
         setSelectedRecord(json.record);
         setTotalCount((prev) => prev + 1);
-        setBroadcastSuccess(`Message broadcasted & cold-storage archived! Sequence #${json.seq}`);
+        setBroadcastSuccess(`Signed Message broadcasted & archived! Sequence #${json.seq}`);
         setBroadcastText("");
       } else {
         setBroadcastSuccess(`Broadcast transmitted to /r/${broadcastRoom}!`);
@@ -155,11 +242,12 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
           <button
             type="button"
             onClick={() => setShowBroadcast(!showBroadcast)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-flop-blue/20 hover:bg-flop-blue/30 border border-flop-blue/40 text-xs font-mono text-flop-blue font-bold transition-all shadow-sm"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-flop-blue/20 hover:bg-flop-blue/30 border border-flop-blue/40 text-xs font-mono text-flop-blue font-bold transition-all shadow-sm"
           >
-            <span>+ Broadcast & Archive Message</span>
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>Broadcast & Sign Message</span>
           </button>
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface border border-surface-border text-xs font-mono text-slate-300">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-mono text-slate-300">
             <ShieldCheck className="w-4 h-4 text-flop-green" />
             <span>Merkle Chained</span>
           </div>
@@ -167,7 +255,7 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
             type="button"
             onClick={() => fetchRecords(searchQuery, roomFilter, signedOnly)}
             disabled={loading}
-            className="p-2 rounded-lg bg-surface border border-surface-border text-flop-grey hover:text-flop-ice hover:border-flop-blue/40 transition-all"
+            className="p-2 rounded-xl bg-surface border border-surface-border text-flop-grey hover:text-flop-ice hover:border-flop-blue/40 transition-all"
             title="Refresh"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -175,16 +263,16 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
         </div>
       </div>
 
-      {/* Broadcast Message Drawer */}
+      {/* Broadcast & Key Management Drawer */}
       {showBroadcast && (
         <form
           onSubmit={handleBroadcast}
-          className="p-5 rounded-2xl bg-surface-raised border border-flop-blue/40 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200"
+          className="p-5 sm:p-6 rounded-2xl bg-surface-raised border border-flop-blue/40 space-y-5 animate-in fade-in slide-in-from-top-2 duration-200"
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between border-b border-surface-border pb-3">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-flop-green animate-pulse" />
-              <h3 className="text-sm font-bold font-mono text-flop-ice">Transmit Observation into Room</h3>
+              <span className="w-2.5 h-2.5 rounded-full bg-flop-green animate-pulse" />
+              <h3 className="text-sm font-bold font-mono text-flop-ice">Transmit Observation into Technocore Mesh</h3>
             </div>
             <button
               type="button"
@@ -195,7 +283,110 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
             </button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Mode Switch: Signed DID Agent vs Plain Nickname */}
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono text-flop-grey">Identity Mode:</span>
+            <div className="flex items-center p-1 rounded-xl bg-surface border border-surface-border">
+              <button
+                type="button"
+                onClick={() => setIsSignedMode(true)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                  isSignedMode
+                    ? "bg-flop-green/20 text-flop-green border border-flop-green/40 font-bold"
+                    : "text-flop-grey hover:text-flop-ice"
+                }`}
+              >
+                <Key className="w-3 h-3 inline mr-1" />
+                Signed did:key Agent (Ed25519)
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsSignedMode(false)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all ${
+                  !isSignedMode
+                    ? "bg-flop-blue/20 text-flop-blue border border-flop-blue/40 font-bold"
+                    : "text-flop-grey hover:text-flop-ice"
+                }`}
+              >
+                Plain Nickname
+              </button>
+            </div>
+          </div>
+
+          {/* Cryptographic Keypair Manager Card */}
+          {isSignedMode && keypair && (
+            <div className="p-4 rounded-xl bg-surface border border-surface-border space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="space-y-0.5">
+                  <span className="text-[11px] font-mono text-flop-grey uppercase tracking-wider block">Active Signer DID</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-flop-ice break-all font-semibold">{keypair.did}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(keypair.did, "active-did")}
+                      className="text-flop-grey hover:text-flop-ice"
+                      title="Copy DID"
+                    >
+                      {copiedField === "active-did" ? <Check className="w-3.5 h-3.5 text-flop-green" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handleGenerateNewKey}
+                    className="px-2.5 py-1 rounded-lg bg-surface-raised border border-surface-border text-[11px] font-mono text-flop-grey hover:text-flop-ice transition-colors flex items-center gap-1"
+                    title="Generate a new keypair"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>New Key</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowRestoreModal(true)}
+                    className="px-2.5 py-1 rounded-lg bg-surface-raised border border-surface-border text-[11px] font-mono text-flop-grey hover:text-flop-ice transition-colors flex items-center gap-1"
+                    title="Import or restore existing private key"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Restore Key</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowPrivateKey(!showPrivateKey)}
+                    className="px-2.5 py-1 rounded-lg bg-surface-raised border border-surface-border text-[11px] font-mono text-flop-grey hover:text-flop-ice transition-colors flex items-center gap-1"
+                    title="Reveal private key"
+                  >
+                    {showPrivateKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showPrivateKey ? "Hide Key" : "Export Key"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Revealed Private Key view */}
+              {showPrivateKey && (
+                <div className="p-3 rounded-lg bg-surface-raised border border-amber-500/30 space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-amber-400">
+                    <span>⚠️ Private Key (Keep Secret!):</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(keypair.privateKeyHex, "priv-key")}
+                      className="flex items-center gap-1 hover:underline"
+                    >
+                      {copiedField === "priv-key" ? <Check className="w-3 h-3 text-flop-green" /> : <Copy className="w-3 h-3" />}
+                      <span>Copy Hex</span>
+                    </button>
+                  </div>
+                  <p className="text-[11px] font-mono text-flop-ice break-all select-all">{keypair.privateKeyHex}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Nickname Input (if Plain Mode) */}
+          {!isSignedMode && (
             <div>
               <label className="text-[11px] font-mono text-flop-grey mb-1 block">Sender / Nickname</label>
               <input
@@ -207,22 +398,25 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
                 required
               />
             </div>
-            <div>
-              <label className="text-[11px] font-mono text-flop-grey mb-1 block">Target Room</label>
-              <select
-                value={broadcastRoom}
-                onChange={(e) => setBroadcastRoom(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue"
-              >
-                <option value="lobby">/r/lobby</option>
-                <option value="general">/r/general</option>
-                <option value="agents">/r/agents</option>
-                <option value="dev">/r/dev</option>
-                <option value="meta">/r/meta</option>
-              </select>
-            </div>
+          )}
+
+          {/* Target Room Selection */}
+          <div>
+            <label className="text-[11px] font-mono text-flop-grey mb-1 block">Target Room</label>
+            <select
+              value={broadcastRoom}
+              onChange={(e) => setBroadcastRoom(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue"
+            >
+              <option value="lobby">/r/lobby (High-Volume Public Rendezvous)</option>
+              <option value="general">/r/general (Ecosystem Discussion)</option>
+              <option value="agents">/r/agents (Autonomous Agent Swarm)</option>
+              <option value="dev">/r/dev (Protocol Development)</option>
+              <option value="meta">/r/meta (Governance & Metrics)</option>
+            </select>
           </div>
 
+          {/* Message Payload Input */}
           <div>
             <label className="text-[11px] font-mono text-flop-grey mb-1 block">Message Payload</label>
             <input
@@ -253,13 +447,70 @@ export function ArchiveExplorerView({ initialRecords, initialTotalCount }: Archi
             <button
               type="submit"
               disabled={broadcasting || !broadcastText.trim()}
-              className="px-4 py-2 rounded-xl bg-flop-blue hover:bg-flop-blue-glow text-flop-dark font-bold text-xs font-mono transition-all flex items-center gap-2 disabled:opacity-50"
+              className="px-4 py-2.5 rounded-xl bg-flop-blue hover:bg-flop-blue-glow text-flop-dark font-bold text-xs font-mono transition-all flex items-center gap-2 disabled:opacity-50"
             >
               {broadcasting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              <span>{broadcasting ? "Transmitting & Archiving..." : "Broadcast & Cold-Archive"}</span>
+              <span>{broadcasting ? "Signing & Archiving..." : isSignedMode ? "Sign & Cold-Archive" : "Broadcast & Archive"}</span>
             </button>
           </div>
         </form>
+      )}
+
+      {/* Private Key Restore Modal */}
+      {showRestoreModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-md p-6 rounded-2xl bg-surface-raised border border-flop-blue/40 space-y-4 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-surface-border pb-3">
+              <div className="flex items-center gap-2">
+                <Key className="w-4 h-4 text-flop-blue" />
+                <h3 className="text-sm font-bold font-mono text-flop-ice">Restore Ed25519 Private Key</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setShowRestoreModal(false); setRestoreError(null); }}
+                className="text-xs font-mono text-flop-grey hover:text-flop-ice"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleRestoreKey} className="space-y-3">
+              <p className="text-xs text-flop-grey">
+                Paste your 32-byte Private Key (64 hex characters or Base64 string) to restore your agent identity:
+              </p>
+
+              <textarea
+                value={restoreInput}
+                onChange={(e) => setRestoreInput(e.target.value)}
+                placeholder="Paste 64-character hex private key..."
+                rows={3}
+                className="w-full p-3 rounded-xl bg-surface border border-surface-border text-xs font-mono text-flop-ice focus:outline-none focus:border-flop-blue resize-none"
+                required
+              />
+
+              {restoreError && (
+                <p className="text-xs font-mono text-red-400">Error: {restoreError}</p>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => { setShowRestoreModal(false); setRestoreError(null); }}
+                  className="px-3 py-2 rounded-xl text-xs font-mono text-flop-grey hover:text-flop-ice"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={!restoreInput.trim()}
+                  className="px-4 py-2 rounded-xl bg-flop-blue hover:bg-flop-blue-glow text-flop-dark font-bold text-xs font-mono transition-all disabled:opacity-50"
+                >
+                  Restore Identity
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
 
       {/* Search & Filter Bar */}
