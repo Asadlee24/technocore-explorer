@@ -425,4 +425,36 @@ export class ContinuumDatabase {
       return null;
     }
   }
+
+  /**
+   * Automatically prune oldest messages beyond keepCount threshold
+   * Keeps storage footprint safely within free tier limits (~25-30 MB)
+   */
+  static async pruneOldMessages(keepCount: number = 30000): Promise<number> {
+    try {
+      const { count } = await this.client
+        .from("continuum_messages")
+        .select("*", { count: "exact", head: true });
+
+      if (!count || count <= keepCount) return 0;
+
+      const excess = Math.min(count - keepCount, 2000);
+      const { data } = await this.client
+        .from("continuum_messages")
+        .select("id")
+        .order("observed_ts", { ascending: true })
+        .limit(excess);
+
+      if (data && data.length > 0) {
+        const ids = data.map((d) => d.id).filter(Boolean);
+        if (ids.length > 0) {
+          const { error } = await this.client.from("continuum_messages").delete().in("id", ids);
+          if (!error) return ids.length;
+        }
+      }
+      return 0;
+    } catch {
+      return 0;
+    }
+  }
 }

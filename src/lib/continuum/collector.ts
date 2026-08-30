@@ -206,6 +206,9 @@ export class ContinuumCollector {
         recorded_at: new Date().toISOString(),
       });
 
+      // 7. Auto-prune old messages to stay safely within free tier storage (~25 MB)
+      await ContinuumDatabase.pruneOldMessages(30000);
+
       return {
         roomsChecked: allRoomNames.length,
         messagesIngested: collectedInThisCycle.length,
