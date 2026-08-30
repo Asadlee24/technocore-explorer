@@ -1,4 +1,8 @@
-import "dotenv/config";
+import * as dotenv from "dotenv";
+import { resolve } from "path";
+// Load .env then .env.local so local credentials override when running tsx directly
+dotenv.config({ path: resolve(process.cwd(), ".env") });
+dotenv.config({ path: resolve(process.cwd(), ".env.local"), override: true });
 import { ContinuumCollector } from "../src/lib/continuum/collector";
 import { ContinuumDatabase } from "../src/lib/continuum/db";
 

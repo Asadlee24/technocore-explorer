@@ -1,4 +1,7 @@
-import "dotenv/config";
+import * as dotenv from "dotenv";
+import { resolve } from "path";
+dotenv.config({ path: resolve(process.cwd(), ".env") });
+dotenv.config({ path: resolve(process.cwd(), ".env.local"), override: true });
 import { computeMessageHash, computeLeafHash, combineHashes, verifyMerkleProof } from "../src/lib/continuum/merkle";
 import { MerkleEngine } from "../src/lib/continuum/merkle-engine";
 import { canonicalizeSingleLine } from "../src/lib/protocol/parser";

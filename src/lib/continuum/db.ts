@@ -1,18 +1,36 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { ArchiveRecord, CollectionGap, RoomCoverage, ContinuumCollectorStatus } from "./types";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+// Lazy client factories — evaluated on first use so env vars are available
+function getPublicClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  return createClient(url, key, { auth: { persistSession: false } });
+}
 
-// Public client for reads
-export const supabasePublic: SupabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: { persistSession: false },
+function getAdminClient(): SupabaseClient {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || "";
+  return createClient(url, serviceKey || anonKey, { auth: { persistSession: false } });
+}
+
+// Cached singletons (created on first access)
+let _publicClient: SupabaseClient | null = null;
+let _adminClient: SupabaseClient | null = null;
+
+export const supabasePublic: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    if (!_publicClient) _publicClient = getPublicClient();
+    return (_publicClient as unknown as Record<string | symbol, unknown>)[prop];
+  },
 });
 
-// Admin client for backend collector writes
-export const supabaseAdmin: SupabaseClient = createClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey, {
-  auth: { persistSession: false },
+export const supabaseAdmin: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    if (!_adminClient) _adminClient = getAdminClient();
+    return (_adminClient as unknown as Record<string | symbol, unknown>)[prop];
+  },
 });
 
 export interface DbMessageRow {
@@ -76,7 +94,10 @@ export interface DbTelemetryRow {
 }
 
 export class ContinuumDatabase {
-  private static client: SupabaseClient = supabaseAdmin;
+  private static get client(): SupabaseClient {
+    if (!_adminClient) _adminClient = getAdminClient();
+    return _adminClient;
+  }
 
   /**
    * Test database connectivity
