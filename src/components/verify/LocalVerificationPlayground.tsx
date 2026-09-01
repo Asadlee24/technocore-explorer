@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { verifyMessageSignature } from "@/lib/crypto/verify";
 import { parseDidKey } from "@/lib/crypto/did";
-import { canonicalizeSingleLine } from "@/lib/protocol/parser";
 import {
   ShieldCheck,
   CheckCircle,
@@ -12,12 +11,23 @@ import {
   Lock,
   ArrowRight,
   Database,
+  FileCheck,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { useAudioSettings } from "@/lib/store/audio-settings";
+import {
+  AuditCertificateModal,
+  AuditCertificateData,
+} from "./AuditCertificateModal";
 
 export function LocalVerificationPlayground() {
+  const { playSound } = useAudioSettings();
+
   // Message Form State
-  const [msgDid, setMsgDid] = useState("did:key:z6MkgapAoAJZ78ybHYX3vNny5Qd9UZSU8MmKNwDpAzGubRG4");
+  const [msgDid, setMsgDid] = useState(
+    "did:key:z6MkgapAoAJZ78ybHYX3vNny5Qd9UZSU8MmKNwDpAzGubRG4"
+  );
   const [msgRoom, setMsgRoom] = useState("lobby");
   const [msgNonce, setMsgNonce] = useState("1719400000000");
   const [msgText, setMsgText] = useState("Hello Technocore network!");
@@ -32,6 +42,11 @@ export function LocalVerificationPlayground() {
     publicKeyHex?: string;
   } | null>(null);
 
+  // Certificate Modal State
+  const [certificateData, setCertificateData] =
+    useState<AuditCertificateData | null>(null);
+  const [isCertificateOpen, setIsCertificateOpen] = useState(false);
+
   const handleVerifyMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!msgDid || !msgRoom || !msgText) {
@@ -40,6 +55,7 @@ export function LocalVerificationPlayground() {
         verified: false,
         reason: "Please fill in all required fields (DID, room, nonce, text).",
       });
+      playSound("alert");
       return;
     }
 
@@ -58,6 +74,27 @@ export function LocalVerificationPlayground() {
       payloadCovered: res.payloadCovered,
       publicKeyHex: res.publicKeyHex,
     });
+
+    if (res.verified) {
+      playSound("verified");
+    } else {
+      playSound("alert");
+    }
+  };
+
+  const handleOpenCertificate = () => {
+    if (!result) return;
+    setCertificateData({
+      signerDid: msgDid.trim(),
+      roomOrNs: msgRoom.trim(),
+      nonce: msgNonce.trim(),
+      rawPayload: result.payloadCovered || `${msgRoom}|${msgNonce}|${msgText}`,
+      signature: msgSig.trim() || "UNSIGNED_SIMULATION",
+      verifiedAt: new Date().toISOString(),
+      status: result.verified ? "VALID" : "INVALID",
+    });
+    setIsCertificateOpen(true);
+    playSound("tick");
   };
 
   const parsedDid = parseDidKey(msgDid);
@@ -72,7 +109,9 @@ export function LocalVerificationPlayground() {
               <ShieldCheck className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-flop-ice">Local Signature Verification</h1>
+              <h1 className="text-2xl font-extrabold text-flop-ice">
+                Local Signature Verification
+              </h1>
               <p className="text-xs text-flop-grey">
                 100% offline client-side Ed25519 pure (RFC 8032) cryptographic verification.
               </p>
@@ -174,28 +213,45 @@ export function LocalVerificationPlayground() {
         {/* Verification Result Display */}
         {result && (
           <div
-            className={`p-5 rounded-xl border font-mono text-xs space-y-3 animate-in fade-in ${
+            className={`p-5 rounded-xl border font-mono text-xs space-y-4 animate-in fade-in ${
               result.verified
                 ? "bg-flop-green/15 border-flop-green/40 text-flop-ice"
                 : "bg-surface-raised border-surface-border text-flop-grey"
             }`}
           >
-            <div className="flex items-center gap-2">
-              {result.verified ? (
-                <CheckCircle className="w-5 h-5 text-flop-green" />
-              ) : (
-                <XCircle className="w-5 h-5 text-flop-grey" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {result.verified ? (
+                  <CheckCircle className="w-5 h-5 text-flop-green" />
+                ) : (
+                  <XCircle className="w-5 h-5 text-flop-grey" />
+                )}
+                <span className="font-bold text-sm text-flop-ice">
+                  {result.verified
+                    ? "Signature Cryptographically VALID"
+                    : "Signature Verification FAILED"}
+                </span>
+              </div>
+
+              {result.verified && (
+                <button
+                  type="button"
+                  onClick={handleOpenCertificate}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-flop-green text-flop-base font-bold text-xs hover:bg-flop-green/90 transition-all shadow-sm"
+                >
+                  <FileCheck className="w-3.5 h-3.5" />
+                  <span>Generate Audit Certificate</span>
+                </button>
               )}
-              <span className="font-bold text-sm text-flop-ice">
-                {result.verified ? "Signature Cryptographically VALID" : "Signature Verification FAILED"}
-              </span>
             </div>
 
             <div className="text-xs text-slate-300">{result.reason}</div>
 
             {result.payloadCovered && (
               <div className="p-3 rounded-lg bg-surface border border-surface-border space-y-1">
-                <div className="text-[11px] text-flop-grey">Canonical Payload Covered:</div>
+                <div className="text-[11px] text-flop-grey">
+                  Canonical Payload Covered:
+                </div>
                 <div className="text-flop-ice break-all">{result.payloadCovered}</div>
               </div>
             )}
@@ -223,6 +279,13 @@ export function LocalVerificationPlayground() {
           </Link>
         </div>
       </div>
+
+      {/* Audit Certificate Modal */}
+      <AuditCertificateModal
+        isOpen={isCertificateOpen}
+        onClose={() => setIsCertificateOpen(false)}
+        data={certificateData}
+      />
     </div>
   );
 }

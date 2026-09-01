@@ -19,17 +19,28 @@ import {
   ExternalLink,
   Binary,
   GitBranch,
+  Code2,
+  BarChart3,
+  Bookmark,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useTechnicalMode } from "@/lib/store/technical-mode";
+import { useAudioSettings } from "@/lib/store/audio-settings";
+import { useWatchlist } from "@/lib/store/watchlist-store";
+import { CommandPalette } from "@/components/common/CommandPalette";
+import { WatchlistModal } from "@/components/watchlist/WatchlistModal";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Layers },
   { href: "/live", label: "Live Feed", icon: Activity },
-  { href: "/rooms", label: "Rooms", icon: Compass },
-  { href: "/agents", label: "DID Explorer", icon: Users },
+  { href: "/graph", label: "Topology", icon: GitBranch, isNew: true },
+  { href: "/sandbox", label: "REPL", icon: Code2, isNew: true },
   { href: "/radar", label: "Radar", icon: Radio, highlight: true },
   { href: "/continuum", label: "Continuum", icon: Database, isContinuum: true },
-  { href: "/sequence", label: "Sequence", icon: Hash },
+  { href: "/rooms", label: "Rooms", icon: Compass },
+  { href: "/agents", label: "DIDs", icon: Users },
+  { href: "/analytics", label: "Capacity", icon: BarChart3 },
   { href: "/verify", label: "Verify", icon: ShieldCheck },
   { href: "/guide", label: "Protocol", icon: BookOpen },
   { href: "/mcp", label: "MCP", icon: Terminal },
@@ -38,7 +49,11 @@ const NAV_ITEMS = [
 export function Navbar() {
   const pathname = usePathname();
   const { isTechnicalMode, toggleTechnicalMode } = useTechnicalMode();
+  const { soundEnabled, toggleSound, playSound } = useAudioSettings();
+  const { watchlist } = useWatchlist();
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [watchlistOpen, setWatchlistOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
   // Health ping
@@ -109,7 +124,7 @@ export function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`relative px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
+                    className={`relative px-2 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0 ${
                       isActive
                         ? "text-flop-ice bg-surface-raised border border-flop-blue/40 shadow-sm"
                         : "text-flop-grey hover:text-flop-ice hover:bg-surface-raised/60"
@@ -127,6 +142,11 @@ export function Navbar() {
                       }`}
                     />
                     <span>{link.label}</span>
+                    {link.isNew && (
+                      <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-flop-cyan/20 text-flop-cyan border border-flop-cyan/30">
+                        NEW
+                      </span>
+                    )}
                     {link.highlight && (
                       <span className="w-1.5 h-1.5 rounded-full bg-flop-green animate-pulse" />
                     )}
@@ -135,25 +155,49 @@ export function Navbar() {
               })}
             </nav>
 
-            {/* Right Controls: Live Status, Tech Toggle, Mobile Menu */}
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Live Status */}
-              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-raised border border-surface-border text-[11px] font-mono whitespace-nowrap">
-                <span
-                  className={`w-2 h-2 rounded-full ${
-                    isOnline ? "bg-flop-green animate-pulse" : "bg-flop-grey"
-                  }`}
-                />
-                <span className="text-flop-ice font-medium">
-                  {isOnline ? "LIVE" : "OFFLINE"}
-                </span>
-              </div>
+            {/* Right Controls: Command Palette, Watchlist, Sound, Tech Mode */}
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              
+              {/* Command Palette Button */}
+              <CommandPalette />
+
+              {/* Watchlist Trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setWatchlistOpen(true);
+                  playSound("tick");
+                }}
+                className="relative p-2 rounded-lg bg-surface-raised hover:bg-surface-border border border-surface-border text-flop-grey hover:text-flop-ice transition-colors"
+                title="Open Pinned Targets & Watchlist"
+              >
+                <Bookmark className="w-3.5 h-3.5" />
+                {watchlist.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-flop-blue text-flop-ice text-[9px] font-mono font-bold flex items-center justify-center border border-flop-base">
+                    {watchlist.length}
+                  </span>
+                )}
+              </button>
+
+              {/* Sound Synthesizer Toggle */}
+              <button
+                type="button"
+                onClick={toggleSound}
+                className={`p-2 rounded-lg border transition-colors ${
+                  soundEnabled
+                    ? "bg-flop-cyan/15 text-flop-cyan border-flop-cyan/40"
+                    : "bg-surface-raised text-flop-grey border-surface-border hover:text-flop-ice"
+                }`}
+                title={soundEnabled ? "Mute Sci-Fi Sound FX" : "Enable Sci-Fi Sound FX"}
+              >
+                {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+              </button>
 
               {/* Technical Mode Switch */}
               <button
                 type="button"
                 onClick={toggleTechnicalMode}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border whitespace-nowrap ${
+                className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-mono font-medium transition-all border whitespace-nowrap ${
                   isTechnicalMode
                     ? "bg-flop-blue/20 text-flop-ice border-flop-blue shadow-sm"
                     : "bg-surface-raised text-flop-grey border-surface-border hover:border-flop-grey/50 hover:text-flop-ice"
@@ -161,7 +205,7 @@ export function Navbar() {
                 title="Toggle Technical Mode to inspect raw cryptographic DIDs, nonces, and signatures"
               >
                 <Binary className="w-3.5 h-3.5" />
-                <span>{isTechnicalMode ? "Tech: ON" : "Tech Mode"}</span>
+                <span className="hidden sm:inline">{isTechnicalMode ? "Tech: ON" : "Tech"}</span>
               </button>
 
               {/* Mobile Menu Toggle */}
@@ -214,7 +258,7 @@ export function Navbar() {
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
                         isActive
                           ? "text-flop-ice bg-surface-raised border border-flop-blue font-bold shadow-sm"
                           : "text-slate-300 bg-surface border border-surface-border hover:bg-surface-raised hover:text-flop-ice"
@@ -241,20 +285,24 @@ export function Navbar() {
         </div>
       </header>
 
+      {/* Watchlist Modal */}
+      <WatchlistModal
+        isOpen={watchlistOpen}
+        onClose={() => setWatchlistOpen(false)}
+      />
+
       {/* Floating Mobile Bottom Navigation Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-flop-base/95 backdrop-blur-xl border-t border-surface-border px-2 py-1.5 shadow-2xl">
         <div className="grid grid-cols-5 gap-1 max-w-md mx-auto">
           {[
             { href: "/", label: "Home", icon: Layers },
             { href: "/live", label: "Live", icon: Activity },
+            { href: "/graph", label: "Topology", icon: GitBranch },
+            { href: "/sandbox", label: "REPL", icon: Code2 },
             { href: "/radar", label: "Radar", icon: Radio, highlight: true },
-            { href: "/continuum", label: "Continuum", icon: Database },
-            { href: "/rooms", label: "Rooms", icon: Compass },
           ].map((item) => {
             const Icon = item.icon;
-            const isActive =
-              pathname === item.href ||
-              (item.href === "/continuum" && pathname.startsWith("/continuum"));
+            const isActive = pathname === item.href;
 
             return (
               <Link
