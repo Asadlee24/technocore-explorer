@@ -23,13 +23,28 @@ export class ContinuumCollector {
   private totalMessagesIngested: number = 0;
   private lastRunTs: string = new Date().toISOString();
   private latestRoot: string = "0000000000000000000000000000000000000000000000000000000000000000";
+  private initialized: boolean = false;
 
   constructor(technocoreClient?: TechnocoreClient) {
     this.client = technocoreClient || new TechnocoreClient();
   }
 
+  private async ensureInitialized() {
+    if (this.initialized) return;
+    try {
+      const latestBlocks = await ContinuumDatabase.getMerkleBlocks(1);
+      if (latestBlocks && latestBlocks.length > 0) {
+        this.currentBlockId = (Number(latestBlocks[0].block_id) || 1) + 1;
+        this.latestRoot = latestBlocks[0].merkle_root || this.latestRoot;
+      }
+      this.initialized = true;
+    } catch {
+      this.initialized = true;
+    }
+  }
+
   /**
-   * Run a single full collection & Merkle epoch cycle
+   * Run a single fast collection & Merkle epoch cycle
    */
   async runCollectionCycle(): Promise<{
     roomsChecked: number;
@@ -37,10 +52,16 @@ export class ContinuumCollector {
     newEpochCreated: boolean;
     merkleRoot?: string;
   }> {
+    if (this.isRunning) {
+      return { roomsChecked: 0, messagesIngested: 0, newEpochCreated: false };
+    }
+
     this.isRunning = true;
     this.lastRunTs = new Date().toISOString();
 
     try {
+      await this.ensureInitialized();
+
       // 1. Discover all active rooms from protocol
       const overview = await this.client.getRooms();
       const discoveredRooms = overview.rooms || [];
@@ -68,115 +89,126 @@ export class ContinuumCollector {
       const detectedGaps: DbGapRow[] = [];
       const roomUpserts: DbRoomRow[] = [];
 
-      // 3. Poll each room using cursor
-      for (const roomName of allRoomNames.slice(0, 30)) {
-        const lastSeq = cursorMap.get(roomName) || 0;
-        const msgRes = await this.client.getRoomMessages(roomName, {
-          since: lastSeq > 0 ? lastSeq : undefined,
-          limit: 50,
-        });
+      // 3. Process rooms in parallel chunks of 10
+      const targetRooms = allRoomNames.slice(0, 35);
+      const chunkSize = 10;
 
-        if (!msgRes.messages || msgRes.messages.length === 0) continue;
+      for (let i = 0; i < targetRooms.length; i += chunkSize) {
+        const chunk = targetRooms.slice(i, i + chunkSize);
+        
+        await Promise.all(
+          chunk.map(async (roomName) => {
+            try {
+              const lastSeq = cursorMap.get(roomName) || 0;
+              const msgRes = await this.client.getRoomMessages(roomName, {
+                since: lastSeq > 0 ? lastSeq : undefined,
+                limit: 50,
+              });
 
-        let currentCursor = lastSeq;
-        const roomClassification = classifyRoom(roomName);
+              if (!msgRes.messages || msgRes.messages.length === 0) return;
 
-        for (const msg of msgRes.messages) {
-          // Detect sequence gaps if sequence jumped forward
-          if (currentCursor > 0 && msg.seq > currentCursor + 1) {
-            const missingCount = msg.seq - currentCursor - 1;
-            detectedGaps.push({
-              room_name: roomName,
-              start_seq: currentCursor + 1,
-              end_seq: msg.seq - 1,
-              missing_count: missingCount,
-              detected_at: new Date().toISOString(),
-              gap_reason: "rate_limit_or_buffer_rollover",
-              status: "unrecoverable_ephemeral",
-            });
-          }
+              let currentCursor = lastSeq;
+              const roomClassification = classifyRoom(roomName);
 
-          currentCursor = Math.max(currentCursor, msg.seq);
+              for (const msg of msgRes.messages) {
+                // Detect sequence gaps if sequence jumped forward
+                if (currentCursor > 0 && msg.seq > currentCursor + 1) {
+                  const missingCount = msg.seq - currentCursor - 1;
+                  detectedGaps.push({
+                    room_name: roomName,
+                    start_seq: currentCursor + 1,
+                    end_seq: msg.seq - 1,
+                    missing_count: missingCount,
+                    detected_at: new Date().toISOString(),
+                    gap_reason: "rate_limit_or_buffer_rollover",
+                    status: "unrecoverable_ephemeral",
+                  });
+                }
 
-          // Verify Ed25519 signature if message is signed with did:key
-          let isSigValid: boolean | null = null;
-          if (msg.from.startsWith("did:key:") && msg.sig) {
-            const sigVerdict = verifyMessageSignature({
-              did: msg.from,
-              room: roomName,
-              nonce: msg.nonce ?? 0,
-              text: msg.text,
-              sig: msg.sig,
-            });
-            isSigValid = sigVerdict.verified;
-          }
+                currentCursor = Math.max(currentCursor, msg.seq);
 
-          const canonicalText = canonicalizeSingleLine(msg.text);
-          const archiveTs = new Date().toISOString();
-          const messageHash = computeMessageHash({
-            room: roomName,
-            seq: msg.seq,
-            from: msg.from,
-            text: msg.text,
-            nonce: msg.nonce,
-          });
-          const leafHash = computeLeafHash(msg.seq, messageHash, archiveTs);
+                // Verify Ed25519 signature if message is signed with did:key
+                let isSigValid: boolean | null = null;
+                if (msg.from.startsWith("did:key:") && msg.sig) {
+                  const sigVerdict = verifyMessageSignature({
+                    did: msg.from,
+                    room: roomName,
+                    nonce: msg.nonce ?? 0,
+                    text: msg.text,
+                    sig: msg.sig,
+                  });
+                  isSigValid = sigVerdict.verified;
+                }
 
-          const row: DbMessageRow = {
-            room_name: roomName,
-            seq: msg.seq,
-            observed_ts: msg.ts,
-            from_identity: msg.from,
-            raw_text: msg.text,
-            canonical_text: canonicalText,
-            nonce: msg.nonce ?? null,
-            sig: msg.sig ?? null,
-            signature_valid: isSigValid,
-            message_hash: messageHash,
-            leaf_hash: leafHash,
-            archive_timestamp: archiveTs,
-            archive_block_id: this.currentBlockId,
-          };
+                const canonicalText = canonicalizeSingleLine(msg.text);
+                const archiveTs = new Date().toISOString();
+                const messageHash = computeMessageHash({
+                  room: roomName,
+                  seq: msg.seq,
+                  from: msg.from,
+                  text: msg.text,
+                  nonce: msg.nonce,
+                });
+                const leafHash = computeLeafHash(msg.seq, messageHash, archiveTs);
 
-          collectedInThisCycle.push(row);
-          messagesForEpoch.push({
-            room: roomName,
-            seq: msg.seq,
-            from: msg.from,
-            text: msg.text,
-            nonce: msg.nonce,
-            observedTs: msg.ts,
-          });
-        }
+                const row: DbMessageRow = {
+                  room_name: roomName,
+                  seq: msg.seq,
+                  observed_ts: msg.ts,
+                  from_identity: msg.from,
+                  raw_text: msg.text,
+                  canonical_text: canonicalText,
+                  nonce: msg.nonce ?? null,
+                  sig: msg.sig ?? null,
+                  signature_valid: isSigValid,
+                  message_hash: messageHash,
+                  leaf_hash: leafHash,
+                  archive_timestamp: archiveTs,
+                  archive_block_id: this.currentBlockId,
+                };
 
-        // Prepare room cursor and statistics update
-        roomUpserts.push({
-          room_name: roomName,
-          room_class: roomClassification.isMailbox ? "mailbox" : roomClassification.isOwned ? "owned" : roomClassification.isEphemeral ? "ephemeral" : roomClassification.isPrivate ? "private" : "public",
-          first_seq_observed: 1,
-          last_seq_observed: currentCursor,
-          total_archived_count: currentCursor,
-          coverage_percent: 100.0,
-          is_complete_sequence: true,
-          last_observed_at: new Date().toISOString(),
-        });
+                collectedInThisCycle.push(row);
+                messagesForEpoch.push({
+                  room: roomName,
+                  seq: msg.seq,
+                  from: msg.from,
+                  text: msg.text,
+                  nonce: msg.nonce,
+                  observedTs: msg.ts,
+                });
+              }
+
+              // Prepare room cursor update
+              roomUpserts.push({
+                room_name: roomName,
+                room_class: roomClassification.isMailbox ? "mailbox" : roomClassification.isOwned ? "owned" : roomClassification.isEphemeral ? "ephemeral" : roomClassification.isPrivate ? "private" : "public",
+                first_seq_observed: 1,
+                last_seq_observed: currentCursor,
+                total_archived_count: currentCursor,
+                coverage_percent: 100.0,
+                is_complete_sequence: true,
+                last_observed_at: new Date().toISOString(),
+              });
+            } catch {
+              // Ignore room-level timeouts or network glitches
+            }
+          })
+        );
       }
 
-      // Batch persist gaps and room updates
-      for (const gap of detectedGaps.slice(0, 10)) {
-        await ContinuumDatabase.insertGap(gap);
-      }
-      for (const roomRow of roomUpserts) {
-        await ContinuumDatabase.upsertRoom(roomRow);
-      }
+      // 4. Batch persist gaps and room updates concurrently
+      await Promise.all([
+        detectedGaps.length > 0 ? ContinuumDatabase.insertGapsBatch(detectedGaps.slice(0, 50)) : Promise.resolve(true),
+        roomUpserts.length > 0 ? ContinuumDatabase.upsertRoomsBatch(roomUpserts) : Promise.resolve(true),
+      ]);
 
-      // 4. Persist messages
+      // 5. Persist collected messages in DB
       if (collectedInThisCycle.length > 0) {
         await ContinuumDatabase.insertMessages(collectedInThisCycle);
         this.totalMessagesIngested += collectedInThisCycle.length;
       }
 
-      // 5. Seal Merkle Epoch Block if messages were collected
+      // 6. Seal Merkle Epoch Block if messages were collected
       let newEpochCreated = false;
       let merkleRoot: string | undefined;
 
@@ -187,13 +219,14 @@ export class ContinuumCollector {
           this.latestRoot
         );
 
+        const prevRoot = this.latestRoot;
         this.latestRoot = epochResult.tree.root;
         merkleRoot = epochResult.tree.root;
 
         const epochBlock: DbEpochRow = {
           block_id: this.currentBlockId,
           merkle_root: epochResult.tree.root,
-          prev_root: this.latestRoot !== epochResult.tree.root ? this.latestRoot : null,
+          prev_root: prevRoot !== epochResult.tree.root ? prevRoot : null,
           leaves_count: epochResult.records.length,
           first_seq: epochResult.firstSeq,
           last_seq: epochResult.lastSeq,
@@ -206,7 +239,7 @@ export class ContinuumCollector {
         newEpochCreated = true;
       }
 
-      // 6. Record telemetry
+      // 7. Record telemetry heartbeat
       await ContinuumDatabase.recordTelemetry({
         collector_id: "continuum-primary-collector",
         status: "ONLINE",
@@ -215,11 +248,8 @@ export class ContinuumCollector {
         recorded_at: new Date().toISOString(),
       });
 
-      // 7. Auto-prune old messages to stay safely within free tier storage (~25 MB)
-      await ContinuumDatabase.pruneOldMessages(30000);
-
       return {
-        roomsChecked: allRoomNames.length,
+        roomsChecked: targetRooms.length,
         messagesIngested: collectedInThisCycle.length,
         newEpochCreated,
         merkleRoot,
@@ -241,7 +271,7 @@ export class ContinuumCollector {
    */
   getTelemetry(): CollectorTelemetry {
     return {
-      status: this.isRunning ? "ONLINE" : "ONLINE",
+      status: "ONLINE",
       lastRunTs: this.lastRunTs,
       roomsMonitored: 42,
       messagesIngestedTotal: this.totalMessagesIngested,

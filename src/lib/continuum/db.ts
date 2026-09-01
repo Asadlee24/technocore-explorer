@@ -174,22 +174,30 @@ export class ContinuumDatabase {
   }
 
   /**
-   * Save or update a room's metadata and cursor
+   * Save or update multiple rooms' metadata in a single batch query
    */
-  static async upsertRoom(room: DbRoomRow): Promise<boolean> {
+  static async upsertRoomsBatch(rooms: DbRoomRow[]): Promise<boolean> {
+    if (!rooms.length) return true;
     try {
-      const { error } = await this.client.from("continuum_rooms").upsert(room, {
+      const { error } = await this.client.from("continuum_rooms").upsert(rooms, {
         onConflict: "room_name",
       });
       if (error) {
-        console.error("DB upsertRoom error:", error);
+        console.error("DB upsertRoomsBatch error:", error);
         return false;
       }
       return true;
     } catch (err) {
-      console.error("DB upsertRoom exception:", err);
+      console.error("DB upsertRoomsBatch exception:", err);
       return false;
     }
+  }
+
+  /**
+   * Save or update a room's metadata and cursor
+   */
+  static async upsertRoom(room: DbRoomRow): Promise<boolean> {
+    return this.upsertRoomsBatch([room]);
   }
 
   /**
@@ -408,19 +416,27 @@ export class ContinuumDatabase {
   }
 
   /**
-   * Save detected sequence gap
+   * Save detected sequence gaps in batch
    */
-  static async insertGap(gap: DbGapRow): Promise<boolean> {
+  static async insertGapsBatch(gaps: DbGapRow[]): Promise<boolean> {
+    if (!gaps.length) return true;
     try {
-      const { error } = await this.client.from("continuum_collection_gaps").insert(gap);
+      const { error } = await this.client.from("continuum_collection_gaps").insert(gaps);
       if (error) {
-        console.error("DB insertGap error:", error);
+        console.error("DB insertGapsBatch error:", error);
         return false;
       }
       return true;
     } catch {
       return false;
     }
+  }
+
+  /**
+   * Save detected sequence gap
+   */
+  static async insertGap(gap: DbGapRow): Promise<boolean> {
+    return this.insertGapsBatch([gap]);
   }
 
   /**

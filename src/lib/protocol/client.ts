@@ -27,6 +27,7 @@ export class TechnocoreClient {
     try {
       const res = await fetch(`${this.baseUrl}/rooms`, {
         next: { revalidate: 10 },
+        signal: AbortSignal.timeout(9000),
         headers: {
           Accept: "text/plain",
           "User-Agent": "curl/8.4.0",
@@ -79,6 +80,7 @@ export class TechnocoreClient {
       const url = `${this.baseUrl}/r/${cleanRoom}${queryString}`;
       const res = await fetch(url, {
         next: { revalidate: 3 },
+        signal: AbortSignal.timeout(4000),
         headers: {
           Accept: "text/plain, */*",
           "User-Agent": "curl/8.4.0",
@@ -130,6 +132,7 @@ export class TechnocoreClient {
       const url = `${this.baseUrl}/r/${cleanRoom}?${params.toString()}`;
       const res = await fetch(url, {
         next: { revalidate: 5 },
+        signal: AbortSignal.timeout(4000),
         headers: {
           Accept: "application/json",
           "User-Agent": "curl/8.4.0",
@@ -177,6 +180,7 @@ export class TechnocoreClient {
       const url = `${this.baseUrl}/kv/${encodeURIComponent(namespace)}/${encodeURIComponent(key)}`;
       const res = await fetch(url, {
         next: { revalidate: 30 },
+        signal: AbortSignal.timeout(4000),
         headers: {
           Accept: "text/plain",
           "User-Agent": "curl/8.4.0",

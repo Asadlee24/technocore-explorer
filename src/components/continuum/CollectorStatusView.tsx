@@ -16,13 +16,20 @@ interface CollectorStatusViewProps {
 }
 
 export function CollectorStatusView({ status }: CollectorStatusViewProps) {
+  const isOnline = status.collectorStatus === "ONLINE";
+  const isStandby = status.collectorStatus === "STANDBY";
+  const statusColor = isOnline ? "text-flop-green" : isStandby ? "text-amber-400" : "text-rose-400";
+  const statusBorder = isOnline ? "border-flop-green/30" : isStandby ? "border-amber-400/30" : "border-rose-400/30";
+  const statusDot = isOnline ? "bg-flop-green" : isStandby ? "bg-amber-400" : "bg-rose-400";
+  const statusBg = isOnline ? "bg-flop-green/15" : isStandby ? "bg-amber-400/15" : "bg-rose-400/15";
+
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-surface-border pb-6">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-flop-green/15 border border-flop-green/30 text-flop-green">
+            <div className={`p-2 rounded-lg ${statusBg} ${statusBorder} ${statusColor} border`}>
               <Server className="w-5 h-5" />
             </div>
             <div>
@@ -34,22 +41,22 @@ export function CollectorStatusView({ status }: CollectorStatusViewProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border border-surface-border text-xs font-mono text-flop-green">
-          <span className="w-2 h-2 rounded-full bg-flop-green animate-pulse" />
+        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface border ${statusBorder} text-xs font-mono ${statusColor}`}>
+          <span className={`w-2 h-2 rounded-full ${statusDot} animate-pulse`} />
           <span>COLLECTOR {status.collectorStatus}</span>
         </div>
       </div>
 
       {/* Main Status Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-5 rounded-2xl bg-surface border border-surface-border space-y-2 font-mono">
+        <div className={`p-5 rounded-2xl bg-surface border border-surface-border hover:${statusBorder} transition-all space-y-2 font-mono`}>
           <div className="flex items-center justify-between text-xs text-flop-grey">
             <span>COLLECTOR STATUS</span>
-            <Activity className="w-4 h-4 text-flop-green" />
+            <Activity className={`w-4 h-4 ${statusColor}`} />
           </div>
-          <div className="text-2xl font-extrabold text-flop-green flex items-center gap-2">
-            <span>ONLINE</span>
-            <span className="text-xs px-2 py-0.5 rounded bg-flop-green/20 text-flop-green">
+          <div className={`text-2xl font-extrabold ${statusColor} flex items-center gap-2`}>
+            <span>{status.collectorStatus}</span>
+            <span className={`text-xs px-2 py-0.5 rounded ${statusBg} ${statusColor}`}>
               {status.uptimePercent}% Uptime
             </span>
           </div>

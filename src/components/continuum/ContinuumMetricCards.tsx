@@ -9,6 +9,11 @@ interface ContinuumMetricCardsProps {
 }
 
 export function ContinuumMetricCards({ status }: ContinuumMetricCardsProps) {
+  const isOnline = status.collectorStatus === "ONLINE";
+  const isStandby = status.collectorStatus === "STANDBY";
+  const statusColor = isOnline ? "text-flop-green" : isStandby ? "text-amber-400" : "text-rose-400";
+  const statusDot = isOnline ? "bg-flop-green" : isStandby ? "bg-amber-400" : "bg-rose-400";
+
   return (
     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
       {/* 1. Messages Archived */}
@@ -65,11 +70,11 @@ export function ContinuumMetricCards({ status }: ContinuumMetricCardsProps) {
           <span className="text-xs font-mono font-medium text-flop-grey uppercase">
             Collector Integrity
           </span>
-          <ShieldCheck className="w-4 h-4 text-flop-green" />
+          <ShieldCheck className={`w-4 h-4 ${statusColor}`} />
         </div>
-        <div className="text-xl sm:text-2xl font-mono font-extrabold text-flop-green flex items-center gap-2">
+        <div className={`text-xl sm:text-2xl font-mono font-extrabold ${statusColor} flex items-center gap-2`}>
           <span>{status.collectorStatus}</span>
-          <span className="w-2.5 h-2.5 rounded-full bg-flop-green animate-pulse" />
+          <span className={`w-2.5 h-2.5 rounded-full ${statusDot} animate-pulse`} />
         </div>
         <div className="text-[11px] font-mono text-flop-grey flex items-center justify-between">
           <span>Uptime: {status.uptimePercent}%</span>

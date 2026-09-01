@@ -30,10 +30,10 @@ export function ContinuumLiveStats({ initialStats }: ContinuumLiveStatsProps) {
   useEffect(() => {
     let isMounted = true;
 
-    const pollStats = async () => {
+    const pollStats = async (force: boolean = false) => {
       try {
         setIsUpdating(true);
-        const res = await fetch("/api/continuum/status", { cache: "no-store" });
+        const res = await fetch(`/api/continuum/status${force ? "?sync=true" : ""}`, { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
         if (data.success && data.liveStats && isMounted) {
@@ -49,7 +49,7 @@ export function ContinuumLiveStats({ initialStats }: ContinuumLiveStatsProps) {
       }
     };
 
-    const interval = setInterval(pollStats, 6000);
+    const interval = setInterval(() => pollStats(false), 6000);
     return () => {
       isMounted = false;
       clearInterval(interval);
@@ -57,6 +57,28 @@ export function ContinuumLiveStats({ initialStats }: ContinuumLiveStatsProps) {
   }, []);
 
   const isOnline = stats.collectorStatus === "ONLINE";
+  const isStandby = stats.collectorStatus === "STANDBY";
+  const statusColor = isOnline ? "text-flop-green" : isStandby ? "text-amber-400" : "text-rose-400";
+  const statusBorder = isOnline ? "border-flop-green/30" : isStandby ? "border-amber-400/30" : "border-rose-400/30";
+  const statusDot = isOnline ? "bg-flop-green" : isStandby ? "bg-amber-400" : "bg-rose-400";
+  const statusBg = isOnline ? "bg-flop-green/15" : isStandby ? "bg-amber-400/15" : "bg-rose-400/15";
+
+  const handleManualSync = async () => {
+    if (isUpdating) return;
+    try {
+      setIsUpdating(true);
+      const res = await fetch("/api/continuum/status?sync=true", { cache: "no-store" });
+      const data = await res.json();
+      if (data.success && data.liveStats) {
+        setStats(data.liveStats);
+        setLastSyncTime(new Date().toLocaleTimeString());
+      }
+    } catch {
+      // fallback
+    } finally {
+      setTimeout(() => setIsUpdating(false), 400);
+    }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-2xl bg-surface border border-surface-border p-5 sm:p-6 space-y-5 transition-all hover:border-flop-blue/40">
@@ -71,8 +93,8 @@ export function ContinuumLiveStats({ initialStats }: ContinuumLiveStatsProps) {
             <span className="text-[10px] font-mono px-2.5 py-0.5 rounded-full bg-flop-blue/15 text-flop-ice border border-flop-blue/30 font-bold tracking-wide">
               CONTINUUM LIVE PROTOCOL ARCHIVE
             </span>
-            <span className="text-[10px] font-mono text-flop-green flex items-center gap-1.5 bg-surface-raised px-2 py-0.5 rounded-full border border-flop-green/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-flop-green animate-pulse" />
+            <span className={`text-[10px] font-mono ${statusColor} flex items-center gap-1.5 bg-surface-raised px-2 py-0.5 rounded-full border ${statusBorder}`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${statusDot} animate-pulse`} />
               <span className="font-bold">{stats.collectorStatus}</span>
             </span>
           </div>
@@ -87,13 +109,17 @@ export function ContinuumLiveStats({ initialStats }: ContinuumLiveStatsProps) {
         {/* Live Pulse & Navigation */}
         <div className="flex items-center gap-3 self-start sm:self-center">
           <div className="text-right hidden md:block">
-            <div className="text-[10px] font-mono text-flop-grey flex items-center gap-1 justify-end">
+            <button
+              onClick={handleManualSync}
+              title="Click to trigger instant live protocol sweep"
+              className="text-[10px] font-mono text-flop-grey flex items-center gap-1 justify-end hover:text-flop-ice transition-colors cursor-pointer"
+            >
               <RefreshCw className={`w-3 h-3 text-flop-cyan ${isUpdating ? "animate-spin" : ""}`} />
               <span>Live DB Sync:</span>
-              <span className="text-flop-ice font-bold">{lastSyncTime}</span>
-            </div>
+              <span className="text-flop-ice font-bold underline decoration-dotted">{lastSyncTime}</span>
+            </button>
             <div className="text-[10px] font-mono text-flop-grey truncate max-w-[200px]">
-              Root: <span className="text-flop-cyan">{stats.latestMerkleRoot.slice(0, 12)}...</span>
+              Root: <span className="text-flop-cyan">{stats.latestMerkleRoot ? stats.latestMerkleRoot.slice(0, 12) + "..." : "Syncing..."}</span>
             </div>
           </div>
 
@@ -161,20 +187,20 @@ export function ContinuumLiveStats({ initialStats }: ContinuumLiveStatsProps) {
         </div>
 
         {/* Card 4: Collector Status */}
-        <div className="p-4 rounded-xl bg-surface-raised border border-surface-border hover:border-flop-green/40 transition-all space-y-2 group">
+        <div className={`p-4 rounded-xl bg-surface-raised border border-surface-border hover:${statusBorder} transition-all space-y-2 group`}>
           <div className="flex items-center justify-between text-xs text-flop-grey">
             <span className="text-[10px] uppercase font-bold tracking-wider">Collector Status</span>
-            <div className="p-1.5 rounded-lg bg-flop-green/15 text-flop-green border border-flop-green/30 group-hover:scale-105 transition-transform">
+            <div className={`p-1.5 rounded-lg ${statusBg} ${statusColor} border ${statusBorder} group-hover:scale-105 transition-transform`}>
               <Activity className="w-3.5 h-3.5" />
             </div>
           </div>
-          <div className="text-2xl font-extrabold text-flop-green flex items-center gap-2 tracking-tight">
+          <div className={`text-2xl font-extrabold ${statusColor} flex items-center gap-2 tracking-tight`}>
             <span>{stats.collectorStatus}</span>
-            <span className="w-2.5 h-2.5 rounded-full bg-flop-green animate-pulse" />
+            <span className={`w-2.5 h-2.5 rounded-full ${statusDot} animate-pulse`} />
           </div>
           <div className="text-[11px] text-flop-grey flex items-center justify-between pt-0.5">
             <span>Autonomous Daemon</span>
-            <span className="text-[10px] text-flop-green font-bold">Active Loop</span>
+            <span className={`text-[10px] ${statusColor} font-bold`}>{isOnline ? "Active Loop" : isStandby ? "Heartbeat Ok" : "Idle"}</span>
           </div>
         </div>
       </div>
