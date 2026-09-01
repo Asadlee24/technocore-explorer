@@ -275,13 +275,13 @@ export function CommandPalette() {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4 bg-flop-base/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-[100] flex items-start justify-center pt-16 sm:pt-24 px-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-2xl bg-surface-card border border-surface-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+        className="relative w-full max-w-2xl bg-[#0c1636] border border-surface-border rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[80vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="flex items-center px-4 py-3 border-b border-surface-border gap-3 bg-surface-raised/50">
+        <div className="flex items-center px-4 py-3.5 border-b border-surface-border gap-3 bg-[#0a1128]">
           <Search className="w-5 h-5 text-flop-cyan shrink-0" />
           <input
             ref={inputRef}
@@ -293,20 +293,20 @@ export function CommandPalette() {
               setSelectedIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            className="w-full bg-transparent border-none text-flop-ice placeholder-flop-grey focus:outline-none font-mono text-sm"
+            className="w-full bg-transparent border-none text-flop-ice placeholder-slate-400 focus:outline-none font-mono text-sm"
           />
           <button
             onClick={() => setIsOpen(false)}
-            className="p-1 rounded-md text-flop-grey hover:text-flop-ice hover:bg-surface-raised transition-colors shrink-0"
+            className="p-1 rounded-md text-slate-400 hover:text-flop-ice hover:bg-[#13214a] transition-colors shrink-0"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Results List */}
-        <div className="overflow-y-auto p-2 space-y-1">
+        <div className="overflow-y-auto p-2 space-y-1 bg-[#0c1636]">
           {filteredCommands.length === 0 ? (
-            <div className="p-8 text-center text-flop-grey font-mono text-xs">
+            <div className="p-8 text-center text-slate-400 font-mono text-xs">
               No matching pages or tools found for &quot;{search}&quot;.
             </div>
           ) : (
@@ -318,18 +318,18 @@ export function CommandPalette() {
                   key={cmd.id}
                   onClick={() => handleSelect(cmd)}
                   onMouseEnter={() => setSelectedIndex(idx)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-all group ${
+                  className={`w-full flex items-center justify-between p-3 rounded-xl text-left transition-all group ${
                     isSelected
-                      ? "bg-flop-blue/15 border border-flop-blue/40 text-flop-ice"
-                      : "hover:bg-surface-raised/60 text-flop-grey hover:text-flop-ice border border-transparent"
+                      ? "bg-flop-blue/25 border border-flop-blue/60 text-flop-ice shadow-sm"
+                      : "hover:bg-[#13214a] text-slate-300 hover:text-flop-ice border border-transparent"
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <div
                       className={`p-2 rounded-lg shrink-0 transition-colors ${
                         isSelected
-                          ? "bg-flop-blue/30 text-flop-cyan"
-                          : "bg-surface-raised text-flop-grey group-hover:text-flop-ice"
+                          ? "bg-flop-blue/40 text-flop-cyan"
+                          : "bg-[#13214a] text-slate-400 group-hover:text-flop-ice"
                       }`}
                     >
                       <Icon className="w-4 h-4" />
@@ -339,16 +339,16 @@ export function CommandPalette() {
                         <span className="font-semibold text-sm truncate text-flop-ice">
                           {cmd.title}
                         </span>
-                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-border text-flop-grey">
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#13214a] text-slate-400 border border-surface-border">
                           {cmd.category}
                         </span>
                         {cmd.badge && (
-                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-flop-cyan/15 text-flop-cyan border border-flop-cyan/30">
+                          <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-flop-cyan/20 text-flop-cyan border border-flop-cyan/40">
                             {cmd.badge}
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-flop-grey truncate mt-0.5">
+                      <p className="text-xs text-slate-400 truncate mt-0.5 font-mono">
                         {cmd.description}
                       </p>
                     </div>
@@ -357,7 +357,7 @@ export function CommandPalette() {
                     className={`w-4 h-4 shrink-0 transition-transform ${
                       isSelected
                         ? "text-flop-cyan translate-x-0.5"
-                        : "text-transparent group-hover:text-flop-grey"
+                        : "text-transparent group-hover:text-slate-400"
                     }`}
                   />
                 </button>
@@ -367,14 +367,14 @@ export function CommandPalette() {
         </div>
 
         {/* Footer info */}
-        <div className="px-4 py-2 bg-flop-base/90 border-t border-surface-border flex items-center justify-between text-[11px] font-mono text-flop-grey">
+        <div className="px-4 py-2.5 bg-[#0a1128] border-t border-surface-border flex items-center justify-between text-[11px] font-mono text-slate-400">
           <div className="flex items-center gap-2">
-            <span>Use <kbd className="px-1 py-0.2 bg-surface-raised rounded border border-surface-border">↑</kbd> <kbd className="px-1 py-0.2 bg-surface-raised rounded border border-surface-border">↓</kbd> to navigate</span>
+            <span>Use <kbd className="px-1.5 py-0.5 bg-[#13214a] rounded border border-surface-border text-flop-ice">↑</kbd> <kbd className="px-1.5 py-0.5 bg-[#13214a] rounded border border-surface-border text-flop-ice">↓</kbd> to navigate</span>
             <span>•</span>
-            <span><kbd className="px-1 py-0.2 bg-surface-raised rounded border border-surface-border">Enter</kbd> to select</span>
+            <span><kbd className="px-1.5 py-0.5 bg-[#13214a] rounded border border-surface-border text-flop-ice">Enter</kbd> to select</span>
           </div>
           <div>
-            <kbd className="px-1 py-0.2 bg-surface-raised rounded border border-surface-border">Esc</kbd> to close
+            <kbd className="px-1.5 py-0.5 bg-[#13214a] rounded border border-surface-border text-flop-ice">Esc</kbd> to close
           </div>
         </div>
       </div>

@@ -79,13 +79,13 @@ export function AuditCertificateModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-flop-base/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-xl bg-surface-card border border-surface-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full max-w-xl bg-[#0c1636] border border-surface-border rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Certificate Card Header */}
-        <div className="p-5 border-b border-surface-border bg-gradient-to-r from-flop-base via-surface-card to-flop-base flex items-center justify-between">
+        <div className="p-5 border-b border-surface-border bg-[#0a1128] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-flop-green/15 text-flop-green border border-flop-green/30">
               <ShieldCheck className="w-5 h-5" />

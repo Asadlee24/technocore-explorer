@@ -43,13 +43,13 @@ export function WatchlistModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-flop-base/80 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
       <div
-        className="relative w-full max-w-xl bg-surface-card border border-surface-border rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        className="relative w-full max-w-xl bg-[#0c1636] border border-surface-border rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-border bg-surface-raised/50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-surface-border bg-[#0a1128]">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-lg bg-flop-blue/15 text-flop-cyan border border-flop-cyan/30">
               <Bookmark className="w-4 h-4" />

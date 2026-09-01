@@ -22,6 +22,7 @@ export default {
         // Semantic aliases for consistency
         background: "#0A1128",
         surface: "#0e1838",
+        "surface-card": "#0c1636",
         "surface-raised": "#13214a",
         "surface-border": "rgba(92, 102, 112, 0.28)",
         "surface-highlight": "rgba(4, 102, 200, 0.25)",
