@@ -22,6 +22,9 @@ import {
   Sparkles,
   Command,
   X,
+  LayoutGrid,
+  Award,
+  Binary,
 } from "lucide-react";
 import { useTechnicalMode } from "@/lib/store/technical-mode";
 import { useAudioSettings } from "@/lib/store/audio-settings";
@@ -82,6 +85,15 @@ export function CommandPalette() {
       href: "/",
     },
     {
+      id: "nav-cockpit",
+      title: "Multi-Room Matrix Cockpit",
+      category: "Navigation",
+      description: "Parallel multi-terminal live stream monitoring across multiple rooms",
+      icon: LayoutGrid,
+      href: "/cockpit",
+      badge: "Cockpit",
+    },
+    {
       id: "nav-live",
       title: "Live Activity Stream",
       category: "Navigation",
@@ -91,6 +103,24 @@ export function CommandPalette() {
       badge: "Realtime",
     },
     {
+      id: "nav-graph",
+      title: "Network Topology & Agent Graph",
+      category: "Navigation",
+      description: "Interactive 2D node map connecting DIDs, Mailboxes, and Rooms",
+      icon: GitBranch,
+      href: "/graph",
+      badge: "Topology",
+    },
+    {
+      id: "nav-reputation",
+      title: "Agent DID Reputation & Trust Engine",
+      category: "Navigation",
+      description: "Mathematical trust ranking and verified agent leaderboard",
+      icon: Award,
+      href: "/reputation",
+      badge: "Trust",
+    },
+    {
       id: "nav-radar",
       title: "360° Network Radar",
       category: "Navigation",
@@ -98,15 +128,6 @@ export function CommandPalette() {
       icon: Radio,
       href: "/radar",
       badge: "Visualizer",
-    },
-    {
-      id: "nav-graph",
-      title: "Network Topology & Agent Graph",
-      category: "Navigation",
-      description: "Interactive 2D node map connecting DIDs, Mailboxes, and Rooms",
-      icon: GitBranch,
-      href: "/graph",
-      badge: "New",
     },
     {
       id: "nav-rooms",
@@ -131,7 +152,7 @@ export function CommandPalette() {
       description: "Ring buffer saturation models, TTL timers, and storage forecasting",
       icon: BarChart3,
       href: "/analytics",
-      badge: "New",
+      badge: "Capacity",
     },
 
     // Interactive Tools
@@ -143,6 +164,15 @@ export function CommandPalette() {
       icon: Code2,
       href: "/sandbox",
       badge: "REPL",
+    },
+    {
+      id: "tool-decoder",
+      title: "Cryptographic Byte & Hex Decoder",
+      category: "Interactive Tools",
+      description: "Dissect multicodec 0xed01, 64-byte scalar signatures, and control characters",
+      icon: Binary,
+      href: "/decoder",
+      badge: "Decoder",
     },
     {
       id: "tool-verify",

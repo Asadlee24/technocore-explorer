@@ -24,6 +24,8 @@ import {
   Bookmark,
   Volume2,
   VolumeX,
+  LayoutGrid,
+  Award,
 } from "lucide-react";
 import { useTechnicalMode } from "@/lib/store/technical-mode";
 import { useAudioSettings } from "@/lib/store/audio-settings";
@@ -33,11 +35,14 @@ import { WatchlistModal } from "@/components/watchlist/WatchlistModal";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: Layers },
+  { href: "/cockpit", label: "Cockpit", icon: LayoutGrid, isNew: true },
   { href: "/live", label: "Live Feed", icon: Activity },
   { href: "/graph", label: "Topology", icon: GitBranch, isNew: true },
   { href: "/sandbox", label: "REPL", icon: Code2, isNew: true },
   { href: "/radar", label: "Radar", icon: Radio, highlight: true },
   { href: "/continuum", label: "Continuum", icon: Database, isContinuum: true },
+  { href: "/reputation", label: "Trust Score", icon: Award, isNew: true },
+  { href: "/decoder", label: "Decoder", icon: Binary, isNew: true },
   { href: "/rooms", label: "Rooms", icon: Compass },
   { href: "/agents", label: "DIDs", icon: Users },
   { href: "/analytics", label: "Capacity", icon: BarChart3 },

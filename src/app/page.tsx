@@ -11,6 +11,7 @@ import { ContinuumService } from "@/lib/continuum/data-service";
 import Link from "next/link";
 import { ArrowRight, Layers } from "lucide-react";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 5;
 
 export default async function HomePage() {
